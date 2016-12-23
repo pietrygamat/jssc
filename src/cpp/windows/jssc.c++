@@ -25,6 +25,7 @@
 #include <jni.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <setupapi.h>
 #include "../jssc_SerialNativeInterface.h"
 
 //#include <iostream>
@@ -690,4 +691,18 @@ JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getLinesStatus
     }
     env->SetIntArrayRegion(returnArray, 0, 4, returnValues);
     return returnArray;
+}
+
+/*
+ * Get the properties of the port
+ */
+JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
+        (JNIEnv * env, jclass cls, jstring portName) {
+    const char* name = (const char*) env->GetStringUTFChars(portName, NULL);
+    jclass stringClass = env->FindClass("Ljava/lang/String;");
+    jobjectArray ret = env->NewObjectArray(5, stringClass, NULL);
+
+
+    env->ReleaseStringUTFChars(portName, portNameChar);
+    return ret;
 }
