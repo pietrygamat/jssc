@@ -358,8 +358,7 @@ public class SerialPortList {
         } else if(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X) {
             return getNativePortProperties(portName);
         } else if(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_WINDOWS){
-            // TODO
-            return new HashMap<String, String>();
+            return getWindowsPortProperties(portName);
         } else {
             return new HashMap<String, String>();
         }
@@ -403,6 +402,24 @@ public class SerialPortList {
             // nothing to do, return what we have so far
         }
         return props;
+    }
+
+    public static Map<String, String> getWindowsPortProperties(String portName) {
+        Map<String, String> props = new HashMap<String, String>();
+        try {
+            // use JNI functions to read those properties
+            String[] names = { "idProduct", "idVendor", "manufacturer", "product", "serial" };
+            String[] values = SerialNativeInterface.getPortProperties(portName);
+
+            for (int i=0; i < names.length; i++) {
+                if (values[i] != null) {
+                    props.put(names[i], values[i]);
+                }
+            }
+        } catch (Exception e) {
+            // nothing to do, return what we have so far
+        }
+        return props;      
     }
 
     public static Map<String, String> getNativePortProperties(String portName) {

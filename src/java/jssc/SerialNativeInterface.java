@@ -501,5 +501,13 @@ public class SerialNativeInterface {
      */
     public native boolean sendBreak(long handle, int duration);
 
+    /**
+     * Gets the properties of the ports
+     * <br><b>element 0</b> - PID - product id
+     * <br><b>element 1</b> - VID - vendor id
+     * <br><b>element 2</b> - Manufacturer
+     * <br><b>element 3</b> - Product
+     * <br><b>element 4</b> - Serial
+     */
     public static native String[] getPortProperties(String portName);
 }
