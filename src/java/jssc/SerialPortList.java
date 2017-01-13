@@ -409,7 +409,7 @@ public class SerialPortList {
         try {
             // use JNI functions to read those properties
             String[] names = { "idProduct", "idVendor", "manufacturer", "product", "serial" };
-            String[] values = SerialNativeInterface.getPortProperties(portName);
+            String[] values = serialInterface.getPortProperties(portName);
 
             for (int i=0; i < names.length; i++) {
                 if (values[i] != null) {
@@ -427,7 +427,7 @@ public class SerialPortList {
         try {
             // use JNI functions to read those properties
             String[] names = { "idProduct", "idVendor", "manufacturer", "product", "serial" };
-            String[] values = SerialNativeInterface.getPortProperties(portName);
+            String[] values = serialInterface.getPortProperties(portName);
 
             for (int i=0; i < names.length; i++) {
                 if (values[i] != null) {
