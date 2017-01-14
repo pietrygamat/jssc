@@ -201,7 +201,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_sendBreak
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
-  (JNIEnv *, jclass, jstring);
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }

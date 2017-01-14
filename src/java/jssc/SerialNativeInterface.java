@@ -509,5 +509,5 @@ public class SerialNativeInterface {
      * <br><b>element 3</b> - Product
      * <br><b>element 4</b> - Serial
      */
-    public static native String[] getPortProperties(String portName);
+    public native String[] getPortProperties(String portName);
 }

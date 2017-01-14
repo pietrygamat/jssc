@@ -1,1 +1,7 @@
 .idea/
+.vs/
+Debug/
+out/
+META_INF/
+bin/
+_ReSharper.Caches

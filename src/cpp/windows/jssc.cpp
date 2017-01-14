@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <setupapi.h>
+#include <iostream>
 #if __cplusplus <= 199711L
     #include <tr1/regex>
     namespace std {
@@ -709,8 +710,10 @@ JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getLinesStatus
  * throughout
  */
 JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
-        (JNIEnv * env, jclass cls, jstring portName) {
-    // Convert to C++ friendly names
+        (JNIEnv * env, jobject cls, jstring portName) {
+    std::cout << "Attempting to find the devices" << std::endl;
+
+    // Convert to C++ friendly name
     const char* name = (const char*) env->GetStringUTFChars(portName, NULL);
     const size_t nameSize = strlen(name);
 
