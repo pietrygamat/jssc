@@ -26,25 +26,15 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <setupapi.h>
-#include <iostream>
-#if __cplusplus <= 199711L
-    #include <tr1/regex>
-    namespace std {
-        using namespace std::tr1;
-    }
-#endif
-#if __cplusplus > 199711L
-    #include <regex>
-#endif
+#include <regex>
 #include <string>
 #include "../jssc_SerialNativeInterface.h"
-
-//#include <iostream>
+#include <iostream>
 
 /*
  * Get native library version
  */
-JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jobject object) {
+JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jclass cls) {
     return env->NewStringUTF(jSSC_NATIVE_LIB_VERSION);
 }
 
@@ -710,10 +700,9 @@ JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getLinesStatus
  * throughout
  */
 JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
-        (JNIEnv * env, jobject cls, jstring portName) {
-    std::cout << "Attempting to find the devices" << std::endl;
+    (JNIEnv *env, jobject object, jstring portName) {
 
-    // Convert to C++ friendly name
+    // Convert to C++ friendly names
     const char* name = (const char*) env->GetStringUTFChars(portName, NULL);
     const size_t nameSize = strlen(name);
 
@@ -743,7 +732,7 @@ JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
         }
     }
 
-    for (int i = 0; i < size; i++) {
+    for (DWORD i = 0; i < size; i++) {
         GUID guid = list[i];
         // Get device info from the GUID
         HDEVINFO informationSet = SetupDiGetClassDevs(&guid, NULL, NULL, DIGCF_PRESENT);
@@ -772,7 +761,7 @@ JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
             RegCloseKey(key);
 
             // Compare whether or not the key found was the one we wanted
-            if (strncmp((char *) buffer, name, sizeof(name)) != 0)
+            if (strncmp((char *) buffer, name, nameSize) != 0)
                 continue;
 
             // Initialize properties that are desired
@@ -930,10 +919,14 @@ JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
                         manufacturer,
                         required_size,
                         NULL))
-                        manufacturer = new BYTE[1] { '\0' };
+                    {
+                        manufacturer = new BYTE[1];
+                        manufacturer[0] = '\0';
+                    }
                 }
                 else {
-                    manufacturer = new BYTE[1] { '\0' };
+                    manufacturer = new BYTE[1];
+                    manufacturer[0] = '\0';
                 }
             }
 
@@ -956,16 +949,19 @@ JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
                         product,
                         required_size,
                         NULL))
-                        product = new BYTE[1] { '\0' };
+                        product = new BYTE[1];
+                        product[0] = '\0';
                 }
                 else {
-                    product = new BYTE[1] { '\0' };
+                    product = new BYTE[1];
+                    product[0] = '\0';
                 }
             }
 
 
             // Unsure how to get serial at this point
-            serial = new BYTE[1] { '\0' };
+            serial = new BYTE[1];
+            serial[0] = '\0';
 
             // Cleanup and return
             delete list;

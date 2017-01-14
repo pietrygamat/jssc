@@ -404,6 +404,27 @@ public class SerialPortList {
         return props;
     }
 
+<<<<<<< HEAD
+=======
+    public static Map<String, String> getWindowsPortProperties(String portName) {
+        Map<String, String> props = new HashMap<String, String>();
+        try {
+            // use JNI functions to read those properties
+            String[] names = { "idProduct", "idVendor", "manufacturer", "product", "serial" };
+            String[] values = serialInterface.getPortProperties(portName);
+
+            for (int i=0; i < names.length; i++) {
+                if (values[i] != null) {
+                    props.put(names[i], values[i]);
+                }
+            }
+        } catch (Exception e) {
+            // nothing to do, return what we have so far
+        }
+        return props;      
+    }
+
+>>>>>>> 400995ef48ae4158ad4d4d5a49eafe4d9262d99d
     public static Map<String, String> getNativePortProperties(String portName) {
         Map<String, String> props = new HashMap<String, String>();
         try {

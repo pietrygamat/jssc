@@ -508,6 +508,12 @@ public class SerialNativeInterface {
      * <br><b>element 2</b> - Manufacturer
      * <br><b>element 3</b> - Product
      * <br><b>element 4</b> - Serial
+     *
+     *
+     * @param portName The name of the port to check
+     * @return The array of data containing metainformation
+     *
+     * @since 2.8
      */
     public native String[] getPortProperties(String portName);
 }
