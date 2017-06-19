@@ -11,6 +11,10 @@ public class SerialPortListTest {
         for (String port : SerialPortList.getPortNames()) {
             System.out.println(port);
             Map<String, String> properties = SerialPortList.getPortProperties(port);
+            for (Map.Entry entry : properties.entrySet()) {
+                System.out.println(entry.getKey() + "  " + entry.getValue());
+            }
+            System.out.println("--END--");
         }
     }
 }
