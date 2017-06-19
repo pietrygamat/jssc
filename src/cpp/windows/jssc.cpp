@@ -25,14 +25,16 @@
 #include <jni.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <setupapi.h>
+#include <regex>
+#include <string>
 #include "../jssc_SerialNativeInterface.h"
-
-//#include <iostream>
+#include <iostream>
 
 /*
  * Get native library version
  */
-JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jobject object) {
+JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jclass cls) {
     return env->NewStringUTF(jSSC_NATIVE_LIB_VERSION);
 }
 
@@ -690,4 +692,318 @@ JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getLinesStatus
     }
     env->SetIntArrayRegion(returnArray, 0, 4, returnValues);
     return returnArray;
+}
+
+/*
+ * Get the properties of the port.
+ * Note: Could be refactored but breaks the seemingly one-method convention used
+ * throughout
+ */
+JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
+    (JNIEnv *env, jobject object, jstring portName) {
+
+    // Convert to C++ friendly names
+    const char* name = (const char*) env->GetStringUTFChars(portName, NULL);
+    const size_t nameSize = strlen(name);
+
+    // Create the Java types we will be returning
+    jclass stringClass = env->FindClass("Ljava/lang/String;");
+    jobjectArray ret = env->NewObjectArray(5, stringClass, NULL);
+
+    // Retrieve the IDs associated with the name Ports for serial ports
+    // Too much work will go into hard coding it
+    DWORD size = 1;
+    DWORD required_size;
+    GUID * list = new GUID[1];
+    if (!SetupDiClassGuidsFromName("Ports", list, size, &required_size)) {
+        delete list;
+        env->ReleaseStringUTFChars(portName, name);
+        return ret;
+    }
+
+    if (required_size > 1) {
+        delete list;
+        list = new GUID[required_size];
+        size = required_size;
+        if (!SetupDiClassGuidsFromName("Ports", list, size, &required_size)) {
+            delete list;
+            env->ReleaseStringUTFChars(portName, name);
+            return ret;
+        }
+    }
+
+    for (DWORD i = 0; i < size; i++) {
+        GUID guid = list[i];
+        // Get device info from the GUID
+        HDEVINFO informationSet = SetupDiGetClassDevs(&guid, NULL, NULL, DIGCF_PRESENT);
+        SP_DEVINFO_DATA device;
+        device.cbSize = sizeof(SP_DEVINFO_DATA);
+
+        // Enumerate over the devices
+        for (int j = 0; SetupDiEnumDeviceInfo(informationSet, j, &device); j++) {
+
+            // Get the registry key
+            HKEY key = SetupDiOpenDevRegKey(informationSet, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+
+            // Legacy support for Windows versions older than XP for some reason
+            // Can go to RegGetValue if only want Windows XP and higher
+            // It is safer and cleaner to use
+
+            // Create the buffer with a proper null terminating character
+            unsigned char buffer[nameSize + 1];
+            buffer[nameSize] = '\0';
+            ULONG bufferSize = (ULONG) nameSize;
+
+            // Check if the PortName is a property of this device
+            if (RegQueryValueEx(key, "PortName", NULL, NULL, buffer, &bufferSize) != ERROR_SUCCESS)
+                continue;
+
+            RegCloseKey(key);
+
+            // Compare whether or not the key found was the one we wanted
+            if (strncmp((char *) buffer, name, nameSize) != 0)
+                continue;
+
+            // Initialize properties that are desired
+            // 100 characters will be largest but should be able to be expanded
+            // Contains the vid and pid of the device
+            // Will attempt to get everything
+            char* hardwareId = new char[51];
+            BYTE* hardwareIdFallback = new BYTE[51];
+            size_t hardwareIdSize = 50;
+            size_t hardwareIdFallbackSize = 50;
+
+            hardwareId[50] = '\0';
+            hardwareIdFallback[50] = '\0';
+
+            bool hardwareIdFetched = false;
+            bool fetchFromRegistry = true;
+
+
+            // Get the hardware ID and pid and vid
+            // Done with registry fallbacks and buffer checking
+            // Maybe add a go-to?
+            if (!SetupDiGetDeviceInstanceId(
+                informationSet, 
+                &device, 
+                hardwareId,
+                hardwareIdSize,
+                &required_size)) {
+
+                // Getting it failed but was the buffer the problem
+                if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+
+                    // Buffer was the problem
+                    hardwareId = new char[required_size];
+                    fetchFromRegistry = false;
+
+                    if (!SetupDiGetDeviceInstanceId(
+                        informationSet,
+                        &device,
+                        hardwareId,
+                        required_size,
+                        NULL)) {
+                        // Attempt to do fallback as the lookup failed again
+                        hardwareIdFetched = false;
+                        fetchFromRegistry = true;
+                    }
+                    else {
+                        hardwareIdFetched = true;
+                        fetchFromRegistry = false;
+                    }
+                }
+
+                // If we need to get to registry, fallback on this method
+                if (fetchFromRegistry) {
+                    if (!SetupDiGetDeviceRegistryProperty(
+                            informationSet,
+                            &device,
+                            SPDRP_HARDWAREID,
+                            NULL,
+                            hardwareIdFallback,
+                            hardwareIdFallbackSize,
+                            &required_size)) {
+                        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+                            // Buffer was the problem, resize
+                            hardwareIdFallback = new BYTE[required_size];
+
+                            if (!SetupDiGetDeviceRegistryProperty(
+                                informationSet,
+                                &device,
+                                SPDRP_HARDWAREID,
+                                NULL,
+                                hardwareIdFallback,
+                                required_size,
+                                NULL)) {
+                                hardwareIdFetched = false;
+                            }
+                            else {
+                                hardwareIdFetched = true;
+                            }
+                        }
+                        else {
+                            // Buffer was not the issue and we have no fallback
+                            hardwareIdFetched = false;
+                        }
+                    }
+                    else {
+                        // We successfully fetched the required ID.
+                        hardwareIdFetched = true;
+                    }
+                }
+            } 
+            else {
+                fetchFromRegistry = false;
+                hardwareIdFetched = true;
+            }
+
+            if (hardwareIdFetched && fetchFromRegistry)
+                hardwareId = (char*) hardwareIdFallback;
+
+            const char * vid;
+            const char * pid;
+            BYTE * manufacturer;
+            BYTE * product;
+            BYTE * serial;
+
+            // Matches VID PID AND REV, but unsure if we need REV for now
+            std::regex usb("USB\\(?:(VID_[0-9A-Za-z]{1,4}))?(?:&(PID_[0-9A-Za-z]{1,4}))?(?:&(REV_[0-9A-Za-z]{1,4}))?");
+            std::regex generic("(?:(VID_[0-9A-Za-z]{1,4})).+?(?:(PID_[0-9A-Za-z]{1,4}))");
+            if (hardwareIdFetched) {
+                std::cmatch m;
+                if (std::regex_search(hardwareId, m, usb)) {
+                    for (std::cmatch::iterator it = m.begin(); it != m.end(); it++) {
+                        std::string match = std::string(it->str());
+                        if (match.compare(0, 4, "VID_")) {
+                            vid = match.substr(4).c_str();
+                        }
+                        else if (match.compare(0, 4, "PID_")) {
+                            pid = match.substr(4).c_str();
+                        }
+                    }
+                }
+                else if (std::regex_search(hardwareId, m, generic)) {
+                    for (std::cmatch::iterator it = m.begin(); it != m.end(); it++) {
+                        std::string match = std::string(it->str());
+                        if (match.compare(0, 4, "VID_")) {
+                            vid = match.substr(4).c_str();
+                        }
+                        else if (match.compare(0, 4, "PID_")) {
+                            pid = match.substr(4).c_str();
+                        }
+                    }
+                }
+                else {
+                    vid = new char[1] { '\0' };
+                    pid = new char[1] { '\0' };
+
+                }
+            }
+
+            // Find the manufacturer
+            if (!SetupDiGetDeviceRegistryProperty(
+                informationSet,
+                &device,
+                SPDRP_MFG,
+                NULL,
+                NULL,
+                0,
+                &required_size)) {
+                if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+                    manufacturer = new BYTE[required_size];
+                    if (!SetupDiGetDeviceRegistryProperty(
+                        informationSet,
+                        &device,
+                        SPDRP_MFG,
+                        NULL,
+                        manufacturer,
+                        required_size,
+                        NULL))
+                    {
+                        manufacturer = new BYTE[1];
+                        manufacturer[0] = '\0';
+                    }
+                }
+                else {
+                    manufacturer = new BYTE[1];
+                    manufacturer[0] = '\0';
+                }
+            }
+
+            // Get the name of the product
+            if (!SetupDiGetDeviceRegistryProperty(
+                informationSet,
+                &device,
+                SPDRP_FRIENDLYNAME,
+                NULL,
+                NULL,
+                0,
+                &required_size)) {
+                if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+                    product = new BYTE[required_size];
+                    if (!SetupDiGetDeviceRegistryProperty(
+                        informationSet,
+                        &device,
+                        SPDRP_FRIENDLYNAME,
+                        NULL,
+                        product,
+                        required_size,
+                        NULL))
+                        product = new BYTE[1];
+                        product[0] = '\0';
+                }
+                else {
+                    product = new BYTE[1];
+                    product[0] = '\0';
+                }
+            }
+
+
+            // Unsure how to get serial at this point
+            serial = new BYTE[1];
+            serial[0] = '\0';
+
+            // Cleanup and return
+            delete list;
+            SetupDiDestroyDeviceInfoList(informationSet);
+            delete hardwareId;
+            delete hardwareIdFallback;
+            env->ReleaseStringUTFChars(portName, name);
+
+            jstring pidString = env->NewStringUTF(pid);
+            env->SetObjectArrayElement(ret, 0, pidString);
+            env->DeleteLocalRef(pidString);
+            delete pid;
+
+            jstring vidString = env->NewStringUTF(vid);
+            env->SetObjectArrayElement(ret, 1, vidString);
+            env->DeleteLocalRef(vidString);
+            delete vid;
+
+            jstring mfgString = env->NewStringUTF((char*) manufacturer);
+            env->SetObjectArrayElement(ret, 2, mfgString);
+            env->DeleteLocalRef(mfgString);
+            delete manufacturer;
+
+            jstring productString = env->NewStringUTF((char*) product);
+            env->SetObjectArrayElement(ret, 3, productString);
+            env->DeleteLocalRef(productString);
+            delete product;
+
+            jstring serialString = env->NewStringUTF((char*) serial);
+            env->SetObjectArrayElement(ret, 4, serialString);
+            env->DeleteLocalRef(serialString);
+            delete serial;
+
+            return ret;
+        }
+
+        // Destroy the list of devices
+        SetupDiDestroyDeviceInfoList(informationSet);
+    }
+
+    // A bit of cleanup
+    delete list;
+    env->ReleaseStringUTFChars(portName, name);
+    return ret;
 }

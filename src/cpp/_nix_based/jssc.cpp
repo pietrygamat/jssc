@@ -56,7 +56,7 @@
 /*
  * Get native library version
  */
-JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jobject object) {
+JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jclass cls) {
     return env->NewStringUTF(jSSC_NATIVE_LIB_VERSION);
 }
 
@@ -879,7 +879,7 @@ JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getLinesStatus
 }
 
 JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getPortProperties
-  (JNIEnv *env, jclass cls, jstring portName) {
+  (JNIEnv *env, jobject obj, jstring portName) {
     const char* portNameChar = (const char*)env->GetStringUTFChars(portName, NULL);
     jclass stringClass = env->FindClass("Ljava/lang/String;");
     jobjectArray ret = env->NewObjectArray(5, stringClass, NULL);
