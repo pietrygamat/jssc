@@ -36,6 +36,8 @@ serialPort.closePort();
 **Note:** The mask is an additive quantity, thus to set a mask on the expectation of the arrival of Event Data (`MASK_RXCHAR`) and change the status lines `CTS` (`MASK_CTS`), `DSR` (`MASK_DSR`) we just need to combine all three masks.
 
 ```java
+import static jssc.SerialPort.*;
+
 SerialPort port = new SerialPort("COM1"); 
 port.openPort();
 port.setParams(BAUDRATE_9600,  DATABITS_8, STOPBITS_1, PARITY_NONE);
