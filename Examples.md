@@ -63,8 +63,7 @@ static class MyPortListener implements SerialPortEventListener {
                System.out.println(ex);
             }
          }
-      }
-      else if(event.isCTS()){ // CTS line has changed state
+      } else if(event.isCTS()){ // CTS line has changed state
          if(event.getEventValue() == 1){ // line is ON
             System.out.println("CTS - ON");
          } else {
