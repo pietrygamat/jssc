@@ -44,7 +44,7 @@ port.setParams(BAUDRATE_9600,  DATABITS_8, STOPBITS_1, PARITY_NONE);
 // port.setParams(9600, 8, 1, 0); // alternate technique
 int mask = SerialPort.MASK_RXCHAR + SerialPort.MASK_CTS + SerialPort.MASK_DSR;
 port.setEventsMask(mask);
-port.addEventListener(new SerialPortReader() /* defined below */);
+port.addEventListener(new MyPortListener() /* defined below */);
 
 /*
  * In this class must implement the method serialEvent, through it we learn about 
@@ -52,11 +52,11 @@ port.addEventListener(new SerialPortReader() /* defined below */);
  * those that we put in the mask. In this case the arrival of the data and change the 
  * status lines CTS and DSR
  */
-static class SerialPortReader implements SerialPortEventListener {
+static class MyPortListener implements SerialPortEventListener {
    public void serialEvent(SerialPortEvent event) {
-      if(event.isRXCHAR()){//If data is available
-         if(event.getEventValue() == 10){ // Check bytes count in the input buffer
-            //Read data, if 10 bytes available 
+      if(event.isRXCHAR()){ // data is available
+         // read data, if 10 bytes available 
+         if(event.getEventValue() == 10){
             try {
                byte buffer[] = serialPort.readBytes(10);
             } catch (SerialPortException ex) {
@@ -64,14 +64,14 @@ static class SerialPortReader implements SerialPortEventListener {
             }
          }
       }
-      else if(event.isCTS()){//If CTS line has changed state
-         if(event.getEventValue() == 1){ //If line is ON
+      else if(event.isCTS()){ // CTS line has changed state
+         if(event.getEventValue() == 1){ // line is ON
             System.out.println("CTS - ON");
          } else {
             System.out.println("CTS - OFF");
          }
-      } else if(event.isDSR()){ ///If DSR line has changed state
-         if(event.getEventValue() == 1){ //If line is ON
+      } else if(event.isDSR()){ /// DSR line has changed state
+         if(event.getEventValue() == 1){ // line is ON
             System.out.println("DSR - ON");
          } else {
             System.out.println("DSR - OFF");
