@@ -1,3 +1,5 @@
+Add to `pom.xml`
+
 ```xml
 <!-- https://mvnrepository.com/artifact/org.scream3r/jssc -->
 <dependency>
