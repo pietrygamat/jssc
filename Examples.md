@@ -69,7 +69,7 @@ static class MyPortListener implements SerialPortEventListener {
          } else {
             System.out.println("CTS - OFF");
          }
-      } else if(event.isDSR()){ /// DSR line has changed state
+      } else if(event.isDSR()){ // DSR line has changed state
          if(event.getEventValue() == 1){ // line is ON
             System.out.println("DSR - ON");
          } else {
