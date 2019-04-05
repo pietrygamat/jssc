@@ -1,5 +1,5 @@
 ### Prerequisites
- * JDK6+
+ * JDK7+
  * C++
    * **Linux:** `gcc`, `clang` or equivalent
    * **macOS:** XCode with Command Line Utilities
