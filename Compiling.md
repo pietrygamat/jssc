@@ -29,4 +29,4 @@ It will contain a broader varieties of OSes and architectures in just one `.jar`
 
 ### Creating just the »uber-jar« artefact
 
-If you do not need a freshly compiled library, you can just execute `mvn package -P nonativebuild` to skip the `cmake` compilation and the unit tests.
+If you do not need a freshly compiled library, you can just execute `mvn package -P package` to skip the `cmake` compilation and the unit tests.
