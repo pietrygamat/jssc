@@ -15,7 +15,11 @@
    ```bash
    mvn             # compile for current system
    mvn -P mingw64  # cross-compile using mingw-w64 for Windows
+   mvn -P m32      # cross-compile using multi-lib for 32-bit library
    ```
+
+   Important, call `mvn clean` between different compiler profiles.
+   For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective `cmake` toolchain in `toolchain/`.
 
 ## Build Output
 
