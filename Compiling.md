@@ -18,8 +18,9 @@
    mvn -P m32      # cross-compile using multi-lib for 32-bit library
    ```
 
-   * **Important:** Call `mvn clean` between different compiler profiles.
-   * **Note:** For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective `cmake` toolchain in `toolchain/`.
+* **Important:** Call `mvn clean` between different compiler profiles.
+* **Note:** For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective `cmake` toolchain in `toolchain/`.
+* If you prefer to skip maven, the project is configured to always allow calling `cmake -DCMAKE_TOOLCHAIN_FILE` directly but the javah generated header file must be present.
 
 ## Build Output
 
