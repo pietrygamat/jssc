@@ -22,7 +22,13 @@
 * **Note:** For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective CMake toolchain file.
 * Prefer to skip maven? The project is configured to allow calling `cmake -DCMAKE_TOOLCHAIN_FILE=<...>` directly but the `javah` generated header file must be present.
 
-## Build Output
+### Package
+Without recompiling native libraries
+```bash
+mvn -P package,jar-with-dependencies
+```
+
+## Advanced
 
 ### machine-dependent artefact
 The build will output two `.jar` files  in the `target/` directory. One archive, which is build by the `maven-jar-plugin`, has a classifier which maches the machine's classifier (unless you are doing a cross-compile). This one will contain a freshly compiled library, like `libjssc.so` for Linux or a `jssc.dll` if you are on Windows. They go into a directory `/natives/os_bitness`.
