@@ -51,9 +51,20 @@ cp -Rf natives/ src/main/resources-precompiled/
 
 ### MacOS
 (Built using MacOS 10.8)
+* Update to 10.8.5
 * Install XCode 5.1.1 from here: https://stackoverflow.com/a/10335943/3196753
-* Install Homebrew from here: https://brew.sh/
-* (FIXME GIT, MAVEN, ANT, JAVA)
+* Install Command Line Tools 5.1: https://download.developer.apple.com/Developer_Tools/command_line_tools_os_x_mountain_lion_for_xcode__march_2014/commandline_tools_os_x_mountain_lion_for_xcode__march_2014.dmg
+* Install Tigerbrew from here: https://github.com/mistydemeo/tigerbrew
+```cmake
+brew install git cmake
+git clone git://github.com/java-native/jssc # use git:// protocol
+# remember to checkout the proper branch
+
+cd jssc
+cmake . && cmake --build .
+cp -Rf natives/ src/main/resources-precompiled/natives/
+```
+* Commit changes and push to branch
 
 ### Publishing
 * Create a Pull Request and merge the branch
