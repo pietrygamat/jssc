@@ -58,7 +58,7 @@ cp -Rf natives/ src/main/resources-precompiled/
 * Install Command Line Tools 5.1: https://download.developer.apple.com/Developer_Tools/command_line_tools_os_x_mountain_lion_for_xcode__march_2014/commandline_tools_os_x_mountain_lion_for_xcode__march_2014.dmg
 * Install Tigerbrew from here: https://github.com/mistydemeo/tigerbrew
 ```bash
-brew install git cmake
+brew install cmake git
 git clone git://github.com/java-native/jssc # use git:// protocol
 # remember to checkout the proper branch
 
@@ -69,7 +69,7 @@ cd jssc
 rm -f CMakeCache.txt && cmake . && cmake --build .
 cp -Rf natives/ src/main/resources-precompiled/natives/
 ```
-* Commit changes and push to branch
+* Dated SSL will prevent from pushing, copy the `.dylib` to a machine with push access.
 
 ### Publishing
 * Create a Pull Request and merge the branch
