@@ -68,7 +68,6 @@ git clone git://github.com/java-native/jssc # use git:// protocol
 
 cd jssc
 rm -f CMakeCache.txt && cmake . && cmake --build .
-cp -Rf natives/ src/main/resources-precompiled/natives/
 ```
 * Dated SSL will prevent from pushing, copy the `.dylib` to a machine with push access.
 
