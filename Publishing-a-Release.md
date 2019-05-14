@@ -74,5 +74,6 @@ cp -Rf natives/ src/main/resources-precompiled/natives/
 ### Publishing
 * Create a Pull Request and merge the branch
 * Create build artifact using `mvn -P package,jar-with-dependencies`
-* Create release in GitHub releases area, match previous release formatting
+* Create release in GitHub releases area, add release notes matching previous release formatting
+   * Upload build artifact and javadoc artifact
 * Append `-SNAPSHOT` to the version in `pom.xml` and commit to master branch
