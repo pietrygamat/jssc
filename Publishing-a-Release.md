@@ -10,7 +10,6 @@
 
 ### Solaris
 (Built using Solaris 10)
-
 ```bash
 # Optionally enable SSH from root
 vi /etc/ssh/sshd_config # Change PermitRootLogin yes
@@ -47,8 +46,8 @@ cp -Rf natives/ src/main/resources-precompiled/
 # build the 64-bit binary
 rm -f CMakeCache.txt && cmake . -DFORCE_M64=True && cmake --build .
 cp -Rf natives/ src/main/resources-precompiled/
-
 ```
+* Commit changes and push to branch
 
 ### MacOS
 (Built using MacOS 10.8)
