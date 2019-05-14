@@ -5,7 +5,7 @@
 
 ### Ubuntu
 (Can build for Windows 32/64, Linux 32/64, Arm 32/64)
-* (FIXME ddeps and build commands)
+* (FIXME deps and build commands)
 * Commit changes and push to branch
 
 ### Solaris
