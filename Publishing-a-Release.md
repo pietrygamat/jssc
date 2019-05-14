@@ -9,7 +9,46 @@
 * Commit changes and push to branch
 
 ### Solaris
-(Built using Solaris 9)
+(Built using Solaris 10)
+
+```bash
+# Optionally enable SSH from root
+vi /etc/ssh/sshd_config # Change PermitRootLogin yes
+svcadm restart ssh
+
+# Enable vi support through ssh
+export TERM=xterm
+
+# Add OpenCSW repos
+pkgadd -d http://get.opencsw.org/now
+/opt/csw/bin/pkgutil -U
+/opt/csw/bin/pkgutil -y -i git
+# /opt/csw/bin/pkgutil -y -i cmake # broken on Solaris 10
+/opt/csw/bin/pkgutil -y -i wget
+
+wget http://mirror.opencsw.org/opencsw/allpkgs/cmake-3.6.3%2cREV%3d2016.11.13.2-SunOS5.10-i386-CSW.pkg.gz
+gunzip *.pkg.gz
+pkgadd -d cmake-*
+
+# Add git, cmake, gcc to path
+export PATH=$PATH:/usr/sfw/bin:/opt/csw/bin
+
+# clone repo
+git clone https://github.com/java-native/jssc
+# remember to checkout the proper branch
+
+# copy jssc_SerialNativeInterface.h AND version.h to jssc directory (from a Linux machine)
+# edit version.h, bump version
+
+# build the 32-bit binary
+rm -f CMakeCache.txt && cmake . && cmake --build .
+cp -Rf natives/ src/main/resources-precompiled/
+
+# build the 64-bit binary
+rm -f CMakeCache.txt && cmake . -DFORCE_M64=True && cmake --build .
+cp -Rf natives/ src/main/resources-precompiled/
+
+```
 
 ### MacOS
 (Built using MacOS 10.8)
