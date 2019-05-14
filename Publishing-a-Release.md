@@ -55,7 +55,7 @@ cp -Rf natives/ src/main/resources-precompiled/
 * Install XCode 5.1.1 from here: https://stackoverflow.com/a/10335943/3196753
 * Install Command Line Tools 5.1: https://download.developer.apple.com/Developer_Tools/command_line_tools_os_x_mountain_lion_for_xcode__march_2014/commandline_tools_os_x_mountain_lion_for_xcode__march_2014.dmg
 * Install Tigerbrew from here: https://github.com/mistydemeo/tigerbrew
-```cmake
+```bash
 brew install git cmake
 git clone git://github.com/java-native/jssc # use git:// protocol
 # remember to checkout the proper branch
