@@ -36,8 +36,10 @@ export PATH=$PATH:/usr/sfw/bin:/opt/csw/bin
 git clone https://github.com/java-native/jssc
 # remember to checkout the proper branch
 
-# copy jssc_SerialNativeInterface.h AND version.h to jssc directory (from a Linux machine)
+# copy jssc_SerialNativeInterface.h AND version.h to jssc directory (from a Unix machine)
 # edit version.h, bump version
+
+cd jssc
 
 # build the 32-bit binary
 rm -f CMakeCache.txt && cmake . && cmake --build .
@@ -60,8 +62,11 @@ brew install git cmake
 git clone git://github.com/java-native/jssc # use git:// protocol
 # remember to checkout the proper branch
 
+# copy jssc_SerialNativeInterface.h AND version.h to jssc directory (from a Unix machine)
+# edit version.h, bump version
+
 cd jssc
-cmake . && cmake --build .
+rm -f CMakeCache.txt && cmake . && cmake --build .
 cp -Rf natives/ src/main/resources-precompiled/natives/
 ```
 * Commit changes and push to branch
