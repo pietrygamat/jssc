@@ -1,7 +1,8 @@
 ### Prerequisites
-* Create a branch (e.g. `2.9.1`)
-* Bump and commit the version in `pom.xml`
-* Checkout the branch
+* [ ] Create a branch (e.g. `2.9.1`)
+* [ ] Bump and commit the version in `pom.xml`
+* [ ] Bump and commit the version in `src/java/jssc/SerialNativeInterface.java`
+* [ ] Checkout the branch
 
 ### Ubuntu
 (Can build for Windows 32/64, Linux 32/64, Arm 32/64)
