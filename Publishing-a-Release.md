@@ -53,6 +53,18 @@ cp -Rf natives/ src/main/resources-precompiled/
 * Commit changes and push to branch
 
 ### MacOS
+* Install XCode and Command Line Tools
+* Install Homebrew
+   ```bash
+   brew install cmake git maven
+   ```
+* Install the 10.8 and 10.9 SDKs from XCode 5.1.1 https://stackoverflow.com/a/10335943/3196753
+   * Copy XCode 5.1.1 to desktop
+   * Show Package Contents
+   * Copy `Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs` to `/Applications/XCode.app/`
+* Run maven: `mvn`, commit and push `.dylib` to fork.
+
+### MacOS (Deprecated)
 (Built using MacOS 10.8)
 * Update to 10.8.5
 * Install XCode 5.1.1 from here: https://stackoverflow.com/a/10335943/3196753
