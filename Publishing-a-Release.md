@@ -53,35 +53,24 @@ cp -Rf natives/ src/main/resources-precompiled/
 * Commit changes and push to branch
 
 ### MacOS
+These steps are for publishing a 10.5-compatible binary using the 10.9 SDK.  They should work on MacOS 10.9 or higher.
 * Install XCode and Command Line Tools
 * Install Homebrew
    ```bash
    brew install cmake git maven
    ```
-* Install the 10.8 and 10.9 SDKs from XCode 5.1.1 https://stackoverflow.com/a/10335943/3196753
-   * Copy XCode 5.1.1 to desktop
+* Install the 10.9 SDKs from XCode 6.2 https://stackoverflow.com/a/10335943/3196753
+   * Double-click the DMG, Right-click XCode, Show Package Contents
    * Show Package Contents
    * Copy `Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs` to `/Applications/XCode.app/`
-* Run maven: `mvn`, commit and push `.dylib` to fork.
-
-### MacOS (Deprecated)
-(Built using MacOS 10.8)
-* Update to 10.8.5
-* Install XCode 5.1.1 from here: https://stackoverflow.com/a/10335943/3196753
-* Install Command Line Tools 5.1: https://download.developer.apple.com/Developer_Tools/command_line_tools_os_x_mountain_lion_for_xcode__march_2014/commandline_tools_os_x_mountain_lion_for_xcode__march_2014.dmg
-* Install Tigerbrew from here: https://github.com/mistydemeo/tigerbrew
-```bash
-brew install cmake git
-git clone git://github.com/java-native/jssc # use git:// protocol
-# remember to checkout the proper branch
-
-# copy jssc_SerialNativeInterface.h AND version.h to jssc directory (from a Unix machine)
-# edit version.h, bump version
-
-cd jssc
-rm -f CMakeCache.txt && cmake . && cmake --build .
-```
-* Dated SSL will prevent from pushing, copy the `.dylib` to a machine with push access.
+* Compile manually using `cmake`
+   ```bash
+   cd jssc # if not already
+   mkdir build && cd build
+   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=10.5
+   make
+   ```
+* Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_64/`
 
 ### Publishing
 * [ ] Create a Pull Request and merge the branch
