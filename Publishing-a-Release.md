@@ -1,8 +1,10 @@
 ### Prerequisites
 * [ ] Create a branch (e.g. `2.9.1`)
 * [ ] Bump and commit the version in `pom.xml`
+* [ ] Bump and commit the version in `README.md`
 * [ ] Bump and commit the version in `src/java/jssc/SerialNativeInterface.java`
 * [ ] Checkout the branch
+* [ ] Publish to [Maven Central](https://github.com/java-native/jssc/pull/68#issuecomment-667074808)
 
 ### Ubuntu
 (Can build for Windows 32/64, Linux 32/64, Arm 32/64)
