@@ -4,6 +4,7 @@
 * [ ] Bump and commit the version in `README.md`
 * [ ] Bump and commit the version in `src/java/jssc/SerialNativeInterface.java`
 * [ ] Checkout the branch
+   * Follow the platform-specific instructions
 * [ ] Publish to [Maven Central](https://github.com/java-native/jssc/pull/68#issuecomment-667074808)
 
 ### Ubuntu
