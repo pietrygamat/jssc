@@ -1,10 +1,9 @@
 Add to `pom.xml`
 
 ```xml
-<!-- https://mvnrepository.com/artifact/org.scream3r/jssc -->
 <dependency>
-    <groupId>org.scream3r</groupId><!-- FIXME, should be "io.github.java-native" -->
+    <groupId>io.github.java-native</groupId>
     <artifactId>jssc</artifactId>
-    <version>2.8.0</version>
+    <version>2.9.2</version>
 </dependency>
 ```
