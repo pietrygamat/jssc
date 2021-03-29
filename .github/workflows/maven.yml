@@ -3,8 +3,7 @@ name: Check against different JDKs
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  pull_request: 
 
 jobs:
   build:
