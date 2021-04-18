@@ -16,11 +16,13 @@
    mvn             # compile for current system
    mvn -P mingw64  # cross-compile using mingw-w64 for Windows
    mvn -P m32      # cross-compile using multi-lib for 32-bit Linux/Unix
-   mvn -P winaarch64  # cross-compile using MVSC for Arm64 Windows 
+   mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows 
+   mvn -P armmac   # cross-compile using Xcode for Aarch64 OSX
    ```
 
 * **Important:** Call `mvn clean` between different compiler profiles.
 * **Note:** For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective CMake toolchain file.
+* **Note:** When compiling for Windows Arm64 target, make sure MSVC Arm64 Build Tools C++ 
 * Prefer to skip maven? The project is configured to allow calling `cmake -DCMAKE_TOOLCHAIN_FILE=<...>` directly but the `javah` generated header file must be present.
 
 ### Package
