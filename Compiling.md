@@ -16,8 +16,8 @@
    mvn             # compile for current system
    mvn -P mingw64  # cross-compile using mingw-w64 for Windows
    mvn -P m32      # cross-compile using multi-lib for 32-bit Linux/Unix
-   mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows 
-   mvn -P armmac   # cross-compile using Xcode for Aarch64 OSX
+   mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows *pending commit to master*
+   mvn -P armmac   # cross-compile using Xcode for Aarch64 MacOS *pending commit to master*
    ```
 
 * **Important:** Call `mvn clean` between different compiler profiles.
