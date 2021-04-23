@@ -17,7 +17,8 @@
    mvn -P mingw64     # cross-compile using mingw-w64 for Windows
    mvn -P m32         # cross-compile using multi-lib for 32-bit Linux/Unix
 
-   mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows (Please See Steps for Setting up **[Windows Developement Environment](https://github.com/java-native-access/jna/blob/master/www/WindowsDevelopmentEnvironment.md)** -        
+   mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows (Please See Steps for Setting up 
+**[Windows Developement Environment](https://github.com/java-native-access/jna/blob/master/www/WindowsDevelopmentEnvironment.md)** -        
                        Pending/Unofficial; See pull request 84                                                                      
    mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows (Please See Steps for Setting up Windows Developement Environment -        
                        Pending/Unofficial; See pull request 84   
