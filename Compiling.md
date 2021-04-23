@@ -28,7 +28,8 @@
    mvn -P win32       # cross-compile using MVSC for x86 Windows   
    mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows  (Pending/Unofficial; See pull request 84)
    ```
-       **MacOS Xcode cross compilation                                                                     
+       **MacOS Xcode cross compilation**
+   ```bash                                                                  
    mvn -P intelmac      # cross-compile using Xcode for X86_64 MacOS  
    mvn -P armmac      # cross-compile using Xcode for Aarch64 MacOS (Pending/unofficial; See #84)
    ```
