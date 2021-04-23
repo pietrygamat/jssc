@@ -12,7 +12,7 @@
       * Manually install CMake from https://cmake.org/download/, adding `cmake.exe` directory to your `%PATH%`
 
 ### Setting up the Visual Studio Build Environment
-   * If compiling a Windows target with Microsoft Visual C++, you will need to initialize the environment using vcvarsall for the appropriate target architecture
+   * If compiling a Windows target with Microsoft Visual C++, you will need to initialize the environment using vcvarsall for the appropriate target architecture.
      * **win64**      - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64  
      * **win32**      - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_x86
      * **winaarch64** - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_arm64  
