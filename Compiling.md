@@ -11,15 +11,18 @@
       * Manually install Maven from https://maven.apache.org/, adding `mvn.bat` directory to your `%PATH%`
       * Manually install CMake from https://cmake.org/download/, adding `cmake.exe` directory to your `%PATH%`
 
-### Setting up the Visual Studio Build environment
-    * if com
+### Setting up the Visual Studio Build Environment
+    * if compiling a Windows target with MSVC, you will need to initialize the environment using vcvarsall for the appropriate target architecture
+      - win64      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64  
+      - win32      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_x86
+      - winaarch64 "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_arm64  
 ### Steps
    ```bash
    mvn                # compile for current system - default compile for native host
    mvn -P mingw64     # cross-compile using mingw-w64 for Windows
    mvn -P m32         # cross-compile using multi-lib for 32-bit Linux/Unix
    ```
-         *please see* **"Setting up a Windows Development Environment"** *for more details for MSVC Cmake compilation*
+         *please see* **"Setting up a Visual Studio Development Environment"** *for more details for MSVC Cmake compilation*
    ```bash
    mvn -P win64       # cross-compile using MVSC for x86_64 Windows   
    mvn -P win32       # cross-compile using MVSC for x86 Windows   
