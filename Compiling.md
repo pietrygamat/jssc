@@ -31,7 +31,7 @@
        **MacOS Xcode cross compilation**
    ```bash                                                                  
    mvn -P intelmac      # cross-compile using Xcode for X86_64 MacOS  
-   mvn -P armmac      # cross-compile using Xcode for Aarch64 MacOS (Pending/unofficial; See #84)
+   mvn -P armmac      # cross-compile using Xcode for Aarch64 MacOS (Pending/unofficial; See pull request #84)
    ```
 
 * **Important:** Call `mvn clean` between different compiler profiles.
