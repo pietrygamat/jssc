@@ -13,9 +13,12 @@
 
 ### Steps
    ```bash
-   mvn                # compile for current system
+   mvn                # compile for current system - default compile for native host
+
+
    mvn -P mingw64     # cross-compile using mingw-w64 for Windows
    mvn -P m32         # cross-compile using multi-lib for 32-bit Linux/Unix
+
    mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows (Pending/unofficial; See #84)
    mvn -P armmac      # cross-compile using Xcode for Aarch64 MacOS (Pending/unofficial; See #84)
    ```
