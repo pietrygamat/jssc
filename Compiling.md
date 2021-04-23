@@ -16,6 +16,7 @@
    mvn                # compile for current system - default compile for native host
    mvn -P mingw64     # cross-compile using mingw-w64 for Windows
    mvn -P m32         # cross-compile using multi-lib for 32-bit Linux/Unix
+   ```
          *please see "Setting up a Windows Developement environment for more details for MSVCC Cmake compilation*
    mvn -P win64       # cross-compile using MVSC for x86_64 Windows   
    mvn -P win32       # cross-compile using MVSC for x86 Windows   
