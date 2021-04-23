@@ -13,9 +13,9 @@
 
 ### Setting up the Visual Studio Build Environment
     If compiling a Windows target with MSVC, you will need to initialize the environment using vcvarsall for the appropriate target architecture
-      win64      - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64  
-      win32      - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_x86
-      winaarch64 - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_arm64  
+     *[]win64      - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64  
+     *[]win32      - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_x86
+     *[]winaarch64 - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64_arm64  
 ### Steps
    ```bash
    mvn                # compile for current system - default compile for native host
