@@ -22,13 +22,13 @@
    mvn -P mingw64     # cross-compile using mingw-w64 for Windows
    mvn -P m32         # cross-compile using multi-lib for 32-bit Linux/Unix
    ```
-         *please see* **"Setting up a Visual Studio Development Environment"** *for more details for MSVC Cmake compilation*
+       **MSVC cross compilation**
    ```bash
    mvn -P win64       # cross-compile using MVSC for x86_64 Windows   
    mvn -P win32       # cross-compile using MVSC for x86 Windows   
    mvn -P winaarch64  # cross-compile using MVSC for Aarch64 Windows  (Pending/Unofficial; See pull request 84)
-
-                                                                      
+   ```
+       **MacOS Xcode cross compilation                                                                     
    mvn -P intelmac      # cross-compile using Xcode for X86_64 MacOS  
    mvn -P armmac      # cross-compile using Xcode for Aarch64 MacOS (Pending/unofficial; See #84)
    ```
