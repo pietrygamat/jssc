@@ -11,7 +11,8 @@
       * Manually install Maven from https://maven.apache.org/, adding `mvn.bat` directory to your `%PATH%`
       * Manually install CMake from https://cmake.org/download/, adding `cmake.exe` directory to your `%PATH%`
 
-### Setting up the Visual Studio 
+### Setting up the Visual Studio Build environment
+    * if com
 ### Steps
    ```bash
    mvn                # compile for current system - default compile for native host
