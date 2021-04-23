@@ -36,7 +36,7 @@
 
 * **Important:** Call `mvn clean` between different compiler profiles.
 * **Note:** For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective CMake toolchain file.
-* **Note:** When compiling for Windows Arm64 target, make sure MSVC Arm64 Build Tools C++  *'preferably the latest one'* is installed 
+* **Note:** When compiling for Windows Arm64 target, make sure MSVC Arm64 Build Tools C++  - *preferably the latest one* - is installed 
 * Prefer to skip maven? The project is configured to allow calling `cmake -DCMAKE_TOOLCHAIN_FILE=<...>` directly but the `javah` generated header file must be present.
 
 ### Package
