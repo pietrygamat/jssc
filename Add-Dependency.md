@@ -11,7 +11,7 @@ Add to `pom.xml`
 ```
 
 ### Gradle (KTS)
-```
+```gradle
 repositories {
     mavenCentral()
 }
@@ -21,7 +21,7 @@ dependencies {
 ```
 
 ### Gradle (Groovy)
-```
+```gradle
 repositories {
     mavenCentral()
 }
