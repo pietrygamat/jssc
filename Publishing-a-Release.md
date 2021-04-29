@@ -2,6 +2,7 @@
 * [ ] Create a branch (e.g. `2.9.1`)
 * [ ] Bump and commit the version in `pom.xml`
 * [ ] Bump and commit the version in `README.md`
+* [ ] Bump the version in [wiki](Add-Dependency)
 * [ ] Bump and commit the version in `src/java/jssc/SerialNativeInterface.java`
 * [ ] Checkout the branch
    * Follow the platform-specific instructions
