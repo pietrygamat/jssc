@@ -44,7 +44,7 @@ port.setParams(BAUDRATE_9600,  DATABITS_8, STOPBITS_1, PARITY_NONE);
 // port.setParams(9600, 8, 1, 0); // alternate technique
 int mask = SerialPort.MASK_RXCHAR + SerialPort.MASK_CTS + SerialPort.MASK_DSR;
 port.setEventsMask(mask);
-port.addEventListener(new MyPortListener() /* defined below */);
+port.addEventListener(new MyPortListener(port) /* defined below */);
 
 /*
  * In this class must implement the method serialEvent, through it we learn about 
@@ -53,12 +53,16 @@ port.addEventListener(new MyPortListener() /* defined below */);
  * status lines CTS and DSR
  */
 static class MyPortListener implements SerialPortEventListener {
+   SerialPort port;
+   public MyPortListener(SerialPort port) {
+      this.port = port;
+   }
    public void serialEvent(SerialPortEvent event) {
       if(event.isRXCHAR()){ // data is available
          // read data, if 10 bytes available 
          if(event.getEventValue() == 10){
             try {
-               byte buffer[] = serialPort.readBytes(10);
+               byte buffer[] = port.readBytes(10);
             } catch (SerialPortException ex) {
                System.out.println(ex);
             }
