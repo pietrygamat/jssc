@@ -8,13 +8,18 @@ fun main() {
     readData()
     eventListener()
 }
-// #List Ports
+```
+
+### List Ports
+```kotlin
 fun listPorts() {
     val ports = SerialPortList.getPortNames()
     ports.forEach { println(it) }
 }
+```
 
-// #Write Data
+### Write Data
+```kotlin
 fun writeData() {
     val port = SerialPort("COM10")
     port.openPort()
@@ -26,7 +31,8 @@ fun writeData() {
     port.closePort()
 }
 
-// #Read Data
+### Read Data
+```kotlin
 fun readData() {
     val port = SerialPort("COM10")
     port.openPort()
@@ -41,7 +47,8 @@ fun readData() {
     port.closePort()
 }
 
-// #Event Listener
+### Event Listener
+```kotlin
 fun eventListener() {
     val port = SerialPort("COM10")
     port.openPort()
