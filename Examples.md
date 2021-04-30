@@ -29,7 +29,7 @@ port.openPort();
 port.setParams(BAUDRATE_9600,  DATABITS_8, STOPBITS_1, PARITY_NONE);
 // port.setParams(9600, 8, 1, 0); // alternate technique
 byte[] buffer = port.readBytes(10 /* read first 10 bytes */);
-serialPort.closePort();
+port.closePort();
 ```
 
 ### Event Listener
