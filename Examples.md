@@ -46,40 +46,41 @@ int mask = SerialPort.MASK_RXCHAR + SerialPort.MASK_CTS + SerialPort.MASK_DSR;
 port.setEventsMask(mask);
 port.addEventListener(new MyPortListener(port) /* defined below */);
 
-/*
- * In this class must implement the method serialEvent, through it we learn about 
- * events that happened to our port. But we will not report on all events but only 
- * those that we put in the mask. In this case the arrival of the data and change the 
+/**
+ * In this class must implement the method serialEvent, through it we learn about
+ * events that happened to our port. But we will not report on all events but only
+ * those that we put in the mask. In this case the arrival of the data and change the
  * status lines CTS and DSR
  */
-static class MyPortListener implements SerialPortEventListener {
-   SerialPort port;
-   public MyPortListener(SerialPort port) {
-      this.port = port;
-   }
-   public void serialEvent(SerialPortEvent event) {
-      if(event.isRXCHAR()){ // data is available
-         // read data, if 10 bytes available 
-         if(event.getEventValue() == 10){
-            try {
-               byte buffer[] = port.readBytes(10);
-            } catch (SerialPortException ex) {
-               System.out.println(ex);
+class MyPortListener implements SerialPortEventListener {
+    SerialPort port;
+    public MyPortListener(SerialPort port) {
+        this.port = port;
+    }
+    public void serialEvent(SerialPortEvent event) {
+        if(event.isRXCHAR()){ // data is available
+            // read data, if 10 bytes available
+            if(event.getEventValue() == 10){
+                try {
+                    byte[] buffer = port.readBytes(10);
+                    System.out.println(Arrays.toString(buffer));
+                } catch (SerialPortException ex) {
+                    System.out.println(ex);
+                }
             }
-         }
-      } else if(event.isCTS()){ // CTS line has changed state
-         if(event.getEventValue() == 1){ // line is ON
-            System.out.println("CTS - ON");
-         } else {
-            System.out.println("CTS - OFF");
-         }
-      } else if(event.isDSR()){ // DSR line has changed state
-         if(event.getEventValue() == 1){ // line is ON
-            System.out.println("DSR - ON");
-         } else {
-            System.out.println("DSR - OFF");
-         }
-      }
-   }
+        } else if(event.isCTS()){ // CTS line has changed state
+            if(event.getEventValue() == 1){ // line is ON
+                System.out.println("CTS - ON");
+            } else {
+                System.out.println("CTS - OFF");
+            }
+        } else if(event.isDSR()){ // DSR line has changed state
+            if(event.getEventValue() == 1){ // line is ON
+                System.out.println("DSR - ON");
+            } else {
+                System.out.println("DSR - OFF");
+            }
+        }
+    }
 }
 ```
