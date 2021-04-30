@@ -63,7 +63,6 @@ class MyPortListener implements SerialPortEventListener {
             if(event.getEventValue() == 10){
                 try {
                     byte[] buffer = port.readBytes(10);
-                    System.out.println(Arrays.toString(buffer));
                 } catch (SerialPortException ex) {
                     System.out.println(ex);
                 }
