@@ -1,4 +1,4 @@
-```kotlin
+```Kotlin
 import jssc.*
 import jssc.SerialPort.*
 
@@ -11,7 +11,7 @@ fun main() {
 ```
 
 ### List Ports
-```kotlin
+```Kotlin
 fun listPorts() {
     val ports = SerialPortList.getPortNames()
     ports.forEach { println(it) }
@@ -19,7 +19,7 @@ fun listPorts() {
 ```
 
 ### Write Data
-```kotlin
+```Kotlin
 fun writeData() {
     val port = SerialPort("COM10")
     port.openPort()
@@ -50,7 +50,7 @@ fun readData() {
 ```
 
 ### Event Listener
-```kotlin
+```Kotlin
 fun eventListener() {
     val port = SerialPort("COM10")
     port.openPort()
@@ -98,7 +98,10 @@ internal class MyPortListener(private val port: SerialPort) :
         }
     }
 }
+```
 
+### Prettify Bytes to String for printing :)
+```Kotlin
 // Please note that Unsigned Integers are a stable feature in Kotlin version >= 1.5
 // This is an extension function for ByteArrays to print them as unsigned hexadecimals
 private fun ByteArray.fancyToString(): String {
