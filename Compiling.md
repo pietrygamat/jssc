@@ -10,9 +10,7 @@
    * **Windows:**
       * Manually install Maven from https://maven.apache.org/, adding `mvn.bat` directory to your `%PATH%`
       * Manually install CMake from https://cmake.org/download/, adding `cmake.exe` directory to your `%PATH%`
-      * Please note that if using Visual Studio 2019 (Full IDE) or Build Tools for Visual Studio 2019 (Command Line Only) you will need to add the            
-        'MSVC v142 - VS 2019 C++ ARM64 build tool for ARM64 binary compilation in Windows - preferably the latest version (currently compiled with   
-        v14.28-16.8 as of wiki update) 
+      * Please note that if using Visual Studio 2019 (Full IDE) or Build Tools for Visual Studio 2019 (Command Line Only) you will need to add the            'MSVC v142 - VS 2019 C++ ARM64 build tool for ARM64 binary compilation in Windows - preferably the latest version (currently compiled with v14.28-16.8 as of wiki update) 
 ### Steps
    ```bash
    mvn             # compile for current system
