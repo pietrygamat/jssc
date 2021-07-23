@@ -36,7 +36,17 @@ sudo apt-get install mingw-w64
 mvn -P mingw64
 ```
 
-### ARM 32-bit
+### Windows ARM 64-bit
+1. Install dependencies
+```bash
+## TODO
+```
+2. Cross-compile using `mingw32` toolchain
+```bash
+## TODO
+```
+
+### Linux ARM 32-bit
 1. Install dependencies
 ```bash
 sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
@@ -47,7 +57,7 @@ sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
 mvn -P armhf
 ```
 
-### ARM 64-bit
+### Linux ARM 64-bit
 1. Install dependencies
 ```bash
 sudo apt-get install g++-aarch64-linux-gnu
@@ -58,7 +68,7 @@ sudo apt-get install g++-aarch64-linux-gnu
 mvn -P aarch64
 ```
 
-### PPC64
+### Linux PPC 64-bit
 1. Install dependencies
 ```bash
 sudo apt-get install g++-powerpc64le-linux-gnu
@@ -67,7 +77,3 @@ sudo apt-get install g++-powerpc64le-linux-gnu
 ```bash
 mvn -P ppc64
 ```
-
-
-
-g++-powerpc64le-linux-gnu
