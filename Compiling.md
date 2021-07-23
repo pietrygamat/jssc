@@ -5,8 +5,8 @@
    * **macOS:** XCode with Command Line Utilities
    * **Windows:** [Microsoft Visual C++](Windows-Build-Environment#visual-studio-components) (or [cross-compile using mingw-w64](Cross-Compilation#windows-32-bit))
  * Maven, CMake
-   * **Linux:** `sudo apt install maven cmake g++`             
-   * **macOS:** `brew install maven cmake`
+   * **Linux:** `sudo apt install openjdk maven cmake g++`             
+   * **macOS:** `brew install openjdk maven cmake`
    * **Windows:**: See [[Windows Build Environment]]
   
 ### Steps
