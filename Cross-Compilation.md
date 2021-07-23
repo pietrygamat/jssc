@@ -37,6 +37,7 @@ mvn -P mingw64
 ```
 
 ### Windows ARM 64-bit
+Note:  Glibc 2.7+ required (Ubuntu 20.04+)
 1. Install dependencies
 ```bash
 mkdir -p "$HOME/llvm-mingw" && wget -qO- 'https://github.com/mstorsjo/llvm-mingw/releases/download/20201020/llvm-mingw-20201020-msvcrt-ubuntu-18.04.tar.xz' | tar xJvf - --strip 1 -C "$HOME/llvm-mingw"
