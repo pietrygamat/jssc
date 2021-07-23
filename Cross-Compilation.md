@@ -49,7 +49,7 @@ mvn -P mingw64
 ### Linux ARM 32-bit
 1. Install dependencies
 ```bash
-sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+sudo apt-get install g++-arm-linux-gnueabihf
 ```
 
 2. Cross-compile using `armhf` toolchain
