@@ -4,7 +4,7 @@ This builds the library based on the G++ compiler and its supplemental packages.
 This will allow you to build native binaries for
 
 * **Windows:** `x86`, `x86_64` using mingw-w64
-* **Linux:** `arm`, `arm64` (aarch64) and `ppc64` native
+* **Linux:** `arm`, `arm64` (aarch64) and `ppc64`
 
 ## Prerequisites
 
