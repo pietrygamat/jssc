@@ -12,13 +12,13 @@
 ### Steps
    ```bash
    mvn             # compile for current system
-   mvn -P x86      # cross-compile using multi-lib for 32-bit x86 on current host OS(Linux/Unix, Windows) 
-   mvn -P x86_64   # cross-compile using multi-lib for 64-bit x86/amd64 on current host OS(Linux/Unix, MacOS, Windows)  
+   mvn -P x86      # cross-compile for 32-bit x86 on current host OS(Linux/Unix, Windows) 
+   mvn -P x86_64   # cross-compile for 64-bit x86/amd64 on current host OS(Linux/Unix, MacOS, Windows)  
    mvn -P ppc64    # cross-compile using multi-lib for PowerPC Linux/Unix
    mvn -P armhf    # cross-compile using multi-lib for arm 32 bit hard floating point Linux/Unix
    mvn -P aarch64  # cross-compile using multi-lib for arm64 based on current host OS (Linux/Unix, MacOS, Windows)
    ```
-
+* For cross-compile dependencies, see [[Cross-Compilation]]
 * **Important:** Call `mvn clean` between different compiler profiles.
 * **Note:** For other cross-compilation profiles or platforms search for `CMAKE_TOOLCHAIN_FILE` in `pom.xml`.  Each has a respective CMake toolchain file.
 * Prefer to skip maven? The project is configured to allow calling `cmake -DCMAKE_TOOLCHAIN_FILE=<...>` directly but the `javah` generated header file must be present.
