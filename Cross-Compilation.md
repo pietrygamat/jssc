@@ -39,7 +39,7 @@ mvn -P mingw64
 ### Windows ARM 64-bit
 1. Install dependencies
 ```bash
-mkdir -p $HOME/llvm-mingw && wget -qO- '$llvm_mingw' | sudo tar xJvf - --strip 1 -C $HOME/llvm-mingw
+mkdir -p $HOME/llvm-mingw && wget -qO- '$llvm_mingw' | tar xJvf - --strip 1 -C $HOME/llvm-mingw
 sudo apt-get install clang
 ```
 2. Cross-compile using `mingwaarch64` toolchain
