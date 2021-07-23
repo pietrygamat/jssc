@@ -1,23 +1,22 @@
 ### Prerequisites
  * JDK7+
  * C++
-   * **Linux:** `gcc`, `clang` or equivalent
+   * **Linux:** `g++`, `clang` or equivalent
    * **macOS:** XCode with Command Line Utilities
-   * **Windows:** Microsoft Visual C++ or mingw-w64
+   * **Windows:** [Microsoft Visual C++](Windows-Build-Environment#visual-studio-components) (or [cross-compile using mingw-w64](Cross-Compilation#windows-32-bit))
  * Maven, CMake
-   * **Linux:** `sudo apt install maven cmake g++`
+   * **Linux:** `sudo apt install maven cmake g++`             
    * **macOS:** `brew install maven cmake`
-   * **Windows:**
-      * Manually install Maven from https://maven.apache.org/, adding `mvn.bat` directory to your `%PATH%`
-      * Manually install CMake from https://cmake.org/download/, adding `cmake.exe` directory to your `%PATH%`
-      * Please note that if using Visual Studio 2019 (Full IDE) or Build Tools for Visual Studio 2019 (Command Line Only) you will need to add the            'MSVC v142 - VS 2019 C++ ARM64 build tool under 'Individual Components' from the Installer Master menu for ARM64 binary compilation in Windows - preferably the latest version (currently compiled with v14.28-16.8 as of wiki update) 
+   * **Windows:**: See [[Windows Build Environment]]
+  
 ### Steps
    ```bash
    mvn             # compile for current system
-   mvn -P mingw64  # cross-compile using mingw-w64 for Windows
-   mvn -P m32      # cross-compile using multi-lib for 32-bit Linux/Unix
-   mvn -P armmac   # cross-compile using Xcode tools
-   mvn -P winaarch64  # cross-compile using MVSC for Arm64 Windows 
+   mvn -P x86      # cross-compile using multi-lib for 32-bit x86 on current host OS(Linux/Unix, Windows) 
+   mvn -P x86_64   # cross-compile using multi-lib for 64-bit x86/amd64 on current host OS(Linux/Unix, MacOS, Windows)  
+   mvn -P ppc64    # cross-compile using multi-lib for PowerPC Linux/Unix
+   mvn -P armhf    # cross-compile using multi-lib for arm 32 bit hard floating point Linux/Unix
+   mvn -P aarch64  # cross-compile using multi-lib for arm64 based on current host OS (Linux/Unix, MacOS, Windows)
    ```
 
 * **Important:** Call `mvn clean` between different compiler profiles.
