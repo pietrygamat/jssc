@@ -3,5 +3,7 @@
 * [[Examples]]
 * [[Examples Kotlin]]
 * [[Compiling]]
+* [[Windows Build Environment]]
+* [[Cross Compilation]] 
 * [[Publishing a Release]]
 
