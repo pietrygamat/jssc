@@ -65,7 +65,7 @@ sudo apt-get install g++-aarch64-linux-gnu
 
 2. Cross-compile using `aarch64` toolchain
 ```bash
-mvn -P aarch64
+mvn -P linux-aarch64
 ```
 
 ### Linux PPC 64-bit
