@@ -4,6 +4,7 @@ This builds the library based on the G++ compiler and its supplemental packages.
 This will allow you to build native binaries for
 
 * **Windows:** `x86`, `x86_64` using mingw-w64
+* **Windows:* `ARM64` using clang llvm-mingw wrapper
 * **Linux:** `arm`, `arm64` (aarch64) and `ppc64`
 
 ## Prerequisites
@@ -39,11 +40,9 @@ mvn -P mingw64
 ### Windows ARM 64-bit
 Note:  Glibc 2.7+ required (Ubuntu 20.04+)
 1. Install dependencies
-```bash
-mkdir -p "$HOME/llvm-mingw" && wget -qO- 'https://github.com/mstorsjo/llvm-mingw/releases/download/20201020/llvm-mingw-20201020-msvcrt-ubuntu-18.04.tar.xz' | tar xJvf - --strip 1 -C "$HOME/llvm-mingw"
 sudo apt-get install clang
 ```
-2. Cross-compile using `mingwaarch64` toolchain
+2. Cross-compile using `mingwaarch64` toolchain (cmake will download automatically)
 ```bash
 mvn -P mingwaarch64
 ```
