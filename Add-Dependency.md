@@ -16,7 +16,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation("io.github.java-native:jssc:2.9.2")
+    implementation("io.github.java-native:jssc:2.9.3")
 }
 ```
 
@@ -26,6 +26,6 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation 'io.github.java-native:jssc:2.9.2'
+    implementation 'io.github.java-native:jssc:2.9.3'
 }
 ```
