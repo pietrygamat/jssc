@@ -6,7 +6,7 @@ Add to `pom.xml`
 <dependency>
     <groupId>io.github.java-native</groupId>
     <artifactId>jssc</artifactId>
-    <version>2.9.2</version>
+    <version>2.9.3</version>
 </dependency>
 ```
 
