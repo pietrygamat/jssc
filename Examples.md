@@ -83,3 +83,17 @@ class MyPortListener implements SerialPortEventListener {
     }
 }
 ```
+
+### Override Native Library Path
+
+Since 2.9.3, JSSC can look in a static native path location `jssc.boot.library.path` for `.dll`, `.so`, `.dylib` files.  See also #92 for use-cases.
+
+```java
+System.setProperty("jssc.boot.library.path", "/path/to/mylibs/");
+```
+
+... or via command line:
+
+```bash
+java -Djssc.boot.library.path=/path/to/mylibs -jar ...
+```
