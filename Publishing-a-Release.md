@@ -57,7 +57,7 @@ cp -Rf natives/ src/main/resources-precompiled/
 
 ### MacOS
 #### x86_64
-These steps are for publishing a 10.9-compatible binary using the 10.9 SDK.  They should work on MacOS 10.9 or higher.
+These steps are for publishing a 10.8-compatible binary using the 10.9 SDK.  They should work on MacOS 10.9 or higher.
 * Install XCode and Command Line Tools
 * Install Homebrew
    ```bash
@@ -72,7 +72,7 @@ These steps are for publishing a 10.9-compatible binary using the 10.9 SDK.  The
    cd jssc # if not already
    mkdir build && cd build
    rm -f CMakeCache.txt # clear previous build cache
-   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9 -DCMAKE_OSX_ARCHITECTURES=x86_64
+   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=10.8 -DCMAKE_OSX_ARCHITECTURES=x86_64
    make
    ```
 * Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_64/`
