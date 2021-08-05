@@ -43,18 +43,16 @@ export PATH
 git clone https://github.com/java-native/jssc
 # remember to checkout the proper branch
 
-# copy jssc_SerialNativeInterface.h AND version.h to jssc directory (from a Unix machine)
-# edit version.h, bump version
-
 cd jssc
 
 # build the 32-bit binary
-rm -f CMakeCache.txt && cmake . && cmake --build .
-cp -Rf natives/ src/main/resources-precompiled/
+mkdir build && cd build
+rm -f CMakeCache.txt && cmake .. && cmake --build .
+cp -Rf natives/ ../src/main/resources-precompiled/
 
 # build the 64-bit binary
-rm -f CMakeCache.txt && cmake . -DFORCE_M64=True && cmake --build .
-cp -Rf natives/ src/main/resources-precompiled/
+rm -f CMakeCache.txt && cmake .. -DFORCE_M64=True && cmake --build .
+cp -Rf natives/ ../src/main/resources-precompiled/
 ```
 * Commit changes and push to branch
 
