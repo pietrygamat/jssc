@@ -35,7 +35,8 @@ gunzip *.pkg.gz
 pkgadd -d cmake-*
 
 # Add git, cmake, gcc to path
-export PATH=$PATH:/usr/sfw/bin:/opt/csw/bin
+PATH=$PATH:/usr/sfw/bin:/opt/csw/bin
+export PATH
 
 # clone repo
 git clone https://github.com/java-native/jssc
