@@ -40,6 +40,7 @@ mvn -P mingw64
 ### Windows ARM 64-bit
 Note:  Glibc 2.7+ required (Ubuntu 20.04+)
 1. Install dependencies
+```bash
 sudo apt-get install clang
 ```
 2. Cross-compile using `mingwaarch64` toolchain (cmake will download automatically)
