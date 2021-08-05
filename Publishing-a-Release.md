@@ -57,6 +57,7 @@ cp -Rf natives/ src/main/resources-precompiled/
 * Commit changes and push to branch
 
 ### MacOS
+#### x86_64
 These steps are for publishing a 10.5-compatible binary using the 10.9 SDK.  They should work on MacOS 10.9 or higher.
 * Install XCode and Command Line Tools
 * Install Homebrew
@@ -75,6 +76,28 @@ These steps are for publishing a 10.5-compatible binary using the 10.9 SDK.  The
    make
    ```
 * Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_64/`
+
+#### aarch64
+These steps are for publishing a 11.0-compatible binary using the 11.0 SDK.  They should work on MacOS 11.0 or higher running Apple Silicon
+* Install XCode and Command Line Tools
+* Install Homebrew
+   ```bash
+   brew install cmake git maven
+   ```
+* Install the 11.0 SDKs from XCode 12.2 https://stackoverflow.com/a/10335943/3196753
+   * Double-click the DMG, Right-click XCode, Show Package Contents
+   * Show Package Contents
+   * Copy `Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs` to `/Applications/XCode.app/`
+* Compile manually using `cmake`
+   ```bash
+   cd jssc # if not already
+   mkdir build && cd build
+   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+   make
+   ```
+* Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_arm64/`
+
+
 
 ### Publishing
 * [ ] Create a Pull Request and merge the branch
