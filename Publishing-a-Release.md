@@ -71,6 +71,7 @@ These steps are for publishing a 10.5-compatible binary using the 10.9 SDK.  The
    ```bash
    cd jssc # if not already
    mkdir build && cd build
+   rm -f CMakeCache.txt # clear previous build cache
    cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=10.5
    make
    ```
@@ -91,6 +92,7 @@ These steps are for publishing a 11.0-compatible binary using the 11.0 SDK.  The
    ```bash
    cd jssc # if not already
    mkdir build && cd build
+   rm -f CMakeCache.txt # clear previous build cache
    cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
    make
    ```
