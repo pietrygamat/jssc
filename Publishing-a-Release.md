@@ -29,6 +29,7 @@ pkgadd -d http://get.opencsw.org/now
 /opt/csw/bin/pkgutil -y -i git
 # /opt/csw/bin/pkgutil -y -i cmake # broken on Solaris 10
 /opt/csw/bin/pkgutil -y -i wget
+/opt/csw/bin/pkgutil -y -i libstlport1
 
 wget http://mirror.opencsw.org/opencsw/allpkgs/cmake-3.6.3%2cREV%3d2016.11.13.2-SunOS5.10-i386-CSW.pkg.gz
 gunzip *.pkg.gz
