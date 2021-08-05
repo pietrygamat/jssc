@@ -20,7 +20,8 @@ vi /etc/ssh/sshd_config # Change PermitRootLogin yes
 svcadm restart ssh
 
 # Enable vi support through ssh
-export TERM=xterm
+TERM=xterm
+export TERM
 
 # Add OpenCSW repos
 pkgadd -d http://get.opencsw.org/now
