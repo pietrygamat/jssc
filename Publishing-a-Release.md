@@ -72,7 +72,7 @@ These steps are for publishing a 10.9-compatible binary using the 10.9 SDK.  The
    cd jssc # if not already
    mkdir build && cd build
    rm -f CMakeCache.txt # clear previous build cache
-   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9
+   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9 -DCMAKE_OSX_ARCHITECTURES=x86_64
    make
    ```
 * Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_64/`
@@ -93,7 +93,7 @@ These steps are for publishing a 11.0-compatible binary using the 11.0 SDK.  The
    cd jssc # if not already
    mkdir build && cd build
    rm -f CMakeCache.txt # clear previous build cache
-   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+   cmake .. -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_OSX_ARCHITECTURES=arm64
    make
    ```
 * Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_arm64/`
