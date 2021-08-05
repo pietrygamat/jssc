@@ -9,9 +9,8 @@
 * [ ] Publish to [Maven Central](https://github.com/java-native/jssc/pull/68#issuecomment-667074808)
 
 ### Ubuntu
-(Can build for Windows 32/64, Linux 32/64, Arm 32/64)
-* (FIXME deps and build commands)
-* Commit changes and push to branch
+* Use oldest possible Ubuntu version (e.g. 14.04) and follow [[Compiling]] or [[Cross-Compilation]] guide respectively.
+* Commit the new `.so` or `.dll` file inside `/src/main/resources-precompiled/natives/linux_64/`, etc.
 
 ### Solaris
 (Built using Solaris 10)
