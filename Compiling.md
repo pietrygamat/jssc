@@ -6,7 +6,7 @@
       * `MacOSX10.9.sdk` is used for release builds due to [notarization requirements](https://github.com/java-native/jssc/issues/54).
    * **Windows:** [Microsoft Visual C++](Windows-Build-Environment#visual-studio-components) (or [cross-compile using mingw-w64](Cross-Compilation#windows-32-bit))
  * Maven, CMake
-   * **Linux:** `sudo apt install openjdk maven cmake g++`             
+   * **Linux:** `sudo apt install openjdk maven cmake g++ file`             
    * **macOS:** `brew install openjdk maven cmake`
    * **Windows:**: See [[Windows Build Environment]]
   
