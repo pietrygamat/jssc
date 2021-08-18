@@ -1,9 +1,8 @@
 ### List Ports
 
 ```java
-String[] ports = SerialPortList.getPortNames();
-for(int i = 0; i < ports.length; i++) {
-   System.out.println(ports[i]);
+for(String port : SerialPortList.getPortNames()) {
+   System.out.println(port);
 }
 ```
 
