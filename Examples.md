@@ -1,6 +1,8 @@
 ### List Ports
 
 ```java
+import static jssc.SerialPort.*;
+
 for(String port : SerialPortList.getPortNames()) {
    System.out.println(port);
 }
