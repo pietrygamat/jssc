@@ -5,8 +5,8 @@ Releasing a new version is a rather involved process and there are several impor
 3. Release artifact should be built using JDK11 to ensure maximum compatibility between JREs.
 4. Maven central deployment is handled by maven-relase-plugin + nexus-staging-maven-plugin.
 5. Manual release from Maven staging repository must be performed by a project member with access to group `io.github.java-native` on https://oss.sonatype.org.
-5. Github Releases deployment follows Maven central release. Artifact deployed to github is a fat-jar, so it is not the same artifact that is sent to Maven Central. It must be built from the same git revions though.
-6. During release process, the `pom.xml` version is bumped automatically, but it needs to be matched in several places that reference it afterwards.
+5. [Github Releases](https://github.com/java-native/jssc/releases) deployment follows Maven central release. Note, the artifact deployed to Github is a fat-jar, so it is **not** the same artifact that is sent to Maven Central. It must be built from the same git revion though.
+6. During the release process, the `pom.xml` version is bumped automatically, but it needs to be matched in several places that reference it afterwards.
 
 ### Checklist
 * [ ] Build and commit native libraries for PC (Linux / Windows, see below)
