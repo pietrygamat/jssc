@@ -16,11 +16,11 @@ Releasing a new version is a rather involved process and there are several impor
 * [ ] Trigger [Release New Version](https://github.com/java-native/jssc/actions/workflows/release-new-version.yml) github action
 * [ ] Login to [OSSRH](https://oss.sonatype.org/#stagingRepositories) and verify the artifacts are in good shape. This is the time for last minute integration tests
     * [ ] Are compiled classes at bytecode version 50 (Java 6)?
-    * [ ] Is there module-info.class in the pacakge?
+    * [ ] Is there module-info.class in the package?
     * [ ] Are there no undesired entries in jar manifest file?
-    * [ ] Is artifact compatible with maven projects build with jdk7,8,11...17? (see below)
-    * [ ] Is artifact usable on JRE6...17?
-    * [ ] Is artifact usable on all supported OSes
+    * [ ] Is the artifact compatible with maven projects build with jdk7,8,11...17? Note, staging repository is publicly available, and may be included in test project in `<repositories>` section of `pom.xml`.
+    * [ ] Is the artifact usable on JRE6...17?
+    * [ ] Is the artifact usable on all supported OSes?
 * [ ] Release the artifact from OSSRH staging repository 
 * [ ] Prepare Github release (see below)
     * [ ] Check out revision tagged during the Maven Release process
