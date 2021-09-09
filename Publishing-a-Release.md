@@ -1,14 +1,39 @@
-### Prerequisites
-* [ ] Create a branch (e.g. `2.9.1`)
-* [ ] Bump and commit the version in `pom.xml`
+# Overview
+Releasing a new version is a rather involved process and there are several important aspects to keep in mind:
+1. Native libraries need to be prebuilt for each of 10 supported architectures and committed to the repository.
+2. Versions in `src/java/jssc/SerialNativeInterface.java` and in `pom.xml` should be in sync. Note that version in `pom.xml` should have `-SNAPSHOT` suffix appended to it most of the time.
+3. Release artifact should be built using JDK11 to ensure maximum compatibility between JREs.
+4. Maven central deployment is handled by maven-relase-plugin + nexus-staging-maven-plugin.
+5. Manual release from Maven staging repository must be performed by a project member with access to group `io.github.java-native` on https://oss.sonatype.org.
+5. Github actions deployment follows Maven central release. Artifact deployed to github is a fat-jar, so it is not the same artifact that is sent to Maven Central. It must be built from the same git revions though.
+6. During release process, the `pom.xml` version is bumped automatically, but it needs to be matched in several places that reference it afterwards.
+
+### Checklist
+* [ ] Build and commit native libraries for PC (Linux / Windows, see below)
+* [ ] Build and commit native libraries for Mac (see below)
+* [ ] Build and commit native libraries for Solaris (see below)
+* [ ] Create release branch, e.g. '2.9.5-release'
+* [ ] Trigger [Release New Version](https://github.com/java-native/jssc/actions/workflows/release-new-version.yml) github action
+* [ ] Login to [OSSRH](https://oss.sonatype.org/#stagingRepositories) and verify the artifacts are in good shape. This is the time for last minute integration tests
+    * [ ] Are compiled classes at bytecode version 50 (Java 6)?
+    * [ ] Is there module-info.class in the pacakge?
+    * [ ] Are there no undesired entries in jar manifest file?
+    * [ ] Is artifact compatible with maven projects build with jdk7,8,11...17? (see below)
+    * [ ] Is artifact usable on JRE6...17?
+    * [ ] Is artifact usable on all supported OSes
+* [ ] Release the artifact from OSSRH staging repository 
+* [ ] Prepare Github release (see below)
+    * [ ] Check out revision tagged during the Maven Release process
+    * [ ] Create build artifact using `mvn -P package,jar-with-dependencies`
+    * [ ] Create release in GitHub releases area, add release notes matching previous release formatting
+    * [ ] Upload build artifact and javadoc artifact
 * [ ] Bump and commit the version in `README.md`
 * [ ] Bump the version in [wiki](Add-Dependency)
 * [ ] Bump and commit the version in `src/java/jssc/SerialNativeInterface.java`
-* [ ] Checkout the branch
-   * Follow the platform-specific instructions
-* [ ] Publish to [Maven Central](https://github.com/java-native/jssc/pull/68#issuecomment-667074808)
+* [ ] Merge release branch back to master. **Do not** use rebase as to preserve tagged revision.
 
-### Ubuntu
+## Building native libraries
+### Ubuntu (for Linux and Windows)
 * Use oldest possible Ubuntu version (e.g. 14.04) and follow [[Compiling]] or [[Cross-Compilation]] guide respectively.
 * Commit the new `.so` or `.dll` file inside `/src/main/resources-precompiled/natives/linux_64/`, etc.
 
@@ -99,11 +124,3 @@ These steps are for publishing a 11.0-compatible binary using the 11.0 SDK.  The
    ```
 * Commit the new `.dylib` file inside `/src/main/resources-precompiled/natives/osx_arm64/`
 
-
-
-### Publishing
-* [ ] Create a Pull Request and merge the branch
-* [ ] Create build artifact using `mvn -P package,jar-with-dependencies`
-* [ ] Create release in GitHub releases area, add release notes matching previous release formatting
-   * [ ] Upload build artifact and javadoc artifact
-* [ ] Append `-SNAPSHOT` to the version in `pom.xml` and commit to master branch
