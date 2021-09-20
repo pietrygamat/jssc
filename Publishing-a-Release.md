@@ -12,11 +12,12 @@ Releasing a new version is a rather involved process and there are several impor
 The steps described above are automated using Github actions, but still some manual supervision is required:
 * [ ] Create a release branch, e.g. `2.9.5-release`
 * [ ] Rebuild precompiled libaries: trigger [this pipeline](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) on the release branch. This step may be skipped if rebuilding libraries is not needed or performed outside of the release.
-* [ ] Make sure all artifacts have been pushed to the branch
-    * [ ] Native libraries for PC (Linux / Windows, see below)
-    * [ ] Native libraries for Mac (see below)
-    * [ ] Native libraries for Solaris (see below)
-    * [ ] `jssc.SerialNativeInterface`'s version is up to date with version in `pom.xml` (without `-SNAPSHOT` qualifier)
+    * [ ] Make sure all artifacts have been pushed to the newly created branch (suffixed with `-precompiled-natives`)
+        * [ ] Native libraries for PC (Linux / Windows, see below)
+        * [ ] Native libraries for Mac (see below)
+        * [ ] Native libraries for Solaris (see below)
+        * [ ] `jssc.SerialNativeInterface`'s version is up to date with version in `pom.xml` (without `-SNAPSHOT` qualifier)
+    * [ ] If artifacts are generated correctly - merge the `*-precompiled-natives` branch into release brach. The pipeline may be rerun multiple times. The `*-precompiled-natives` brach will be dropped and recreated each time.
 * [ ] Trigger [Release New Version](https://github.com/java-native/jssc/actions/workflows/release-new-version.yml) github action
 * [ ] Login to [OSSRH](https://oss.sonatype.org/#stagingRepositories) and verify the artifacts are in good shape. This is the time for last minute integration tests:
     * [ ] Are compiled classes at bytecode version 50 (Java 6)?
