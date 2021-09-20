@@ -13,9 +13,9 @@ The steps described above are automated using Github actions, but still some man
 * [ ] Create a release branch, e.g. `2.9.5-release`
 * [ ] Rebuild precompiled libaries: trigger [this pipeline](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) on the release branch. This step may be skipped if rebuilding libraries is not needed or performed outside of the release.
     * [ ] Make sure all artifacts have been pushed to the newly created branch (suffixed with `-precompiled-natives`)
-        * [ ] Native libraries for PC (Linux / Windows, see below)
-        * [ ] Native libraries for Mac (see below)
-        * [ ] Native libraries for Solaris (see below)
+        * [ ] Native libraries for PC (Linux / Windows)
+        * [ ] Native libraries for Mac
+        * [ ] Native libraries for Solaris
         * [ ] `jssc.SerialNativeInterface`'s version is up to date with version in `pom.xml` (without `-SNAPSHOT` qualifier)
     * [ ] If artifacts are generated correctly - merge the `*-precompiled-natives` branch into release branch. The pipeline may be rerun multiple times. The `*-precompiled-natives` branch will be dropped and recreated each time.
 * [ ] Trigger [Release New Version](https://github.com/java-native/jssc/actions/workflows/release-new-version.yml) github action
