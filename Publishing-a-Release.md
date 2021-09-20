@@ -10,7 +10,7 @@ Releasing a new version is a rather involved process and there are several impor
 
 # Automatic pipelines
 The steps described above are automated using Github actions, but still some manual supervision is required:
-* [ ] Create a release branch, e.g. '2.9.5-release'
+* [ ] Create a release branch, e.g. `2.9.5-release`
 * [ ] Rebuild precompiled libaries: trigger [this pipeline](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) on the release branch. This step may be skipped if rebuilding libraries is not needed or performed outside of the release.
 * [ ] Make sure all artifacts have been pushed to the branch
     * [ ] Native libraries for PC (Linux / Windows, see below)
