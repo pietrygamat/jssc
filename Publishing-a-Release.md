@@ -17,7 +17,7 @@ The steps described above are automated using Github actions, but still some man
         * [ ] Native libraries for Mac (see below)
         * [ ] Native libraries for Solaris (see below)
         * [ ] `jssc.SerialNativeInterface`'s version is up to date with version in `pom.xml` (without `-SNAPSHOT` qualifier)
-    * [ ] If artifacts are generated correctly - merge the `*-precompiled-natives` branch into release brach. The pipeline may be rerun multiple times. The `*-precompiled-natives` brach will be dropped and recreated each time.
+    * [ ] If artifacts are generated correctly - merge the `*-precompiled-natives` branch into release branch. The pipeline may be rerun multiple times. The `*-precompiled-natives` branch will be dropped and recreated each time.
 * [ ] Trigger [Release New Version](https://github.com/java-native/jssc/actions/workflows/release-new-version.yml) github action
 * [ ] Login to [OSSRH](https://oss.sonatype.org/#stagingRepositories) and verify the artifacts are in good shape. This is the time for last minute integration tests:
     * [ ] Are compiled classes at bytecode version 50 (Java 6)?
