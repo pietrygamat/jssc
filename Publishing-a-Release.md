@@ -1,38 +1,43 @@
 # Overview
 Releasing a new version is a rather involved process and there are several important aspects to keep in mind:
-1. Native libraries need to be prebuilt for each of 10 supported architectures and committed to the repository.
-2. Versions in `src/java/jssc/SerialNativeInterface.java` and in `pom.xml` should be in sync. Note that version in `pom.xml` should have `-SNAPSHOT` suffix appended to it most of the time.
+1. Native libraries need to be prebuilt for each of 12 supported architectures and committed to the repository.
+2. Versions in `src/java/jssc/SerialNativeInterface.java` and in `pom.xml` should be in sync. Note that version in `pom.xml` should have a `-SNAPSHOT` suffix appended to it most of the time.
 3. Release artifact should be built using JDK11 to ensure maximum compatibility between JREs.
 4. Maven central deployment is handled by maven-relase-plugin + nexus-staging-maven-plugin.
 5. Manual release from Maven staging repository must be performed by a project member with access to group `io.github.java-native` on https://oss.sonatype.org.
 5. [Github Releases](https://github.com/java-native/jssc/releases) deployment follows Maven central release. Note, the artifact deployed to Github is a fat-jar, so it is **not** the same artifact that is sent to Maven Central. It must be built from the same git revion though.
 6. During the release process, the `pom.xml` version is bumped automatically, but it needs to be matched in several places that reference it afterwards.
 
-### Checklist
-* [ ] Build and commit native libraries for PC (Linux / Windows, see below)
-* [ ] Build and commit native libraries for Mac (see below)
-* [ ] Build and commit native libraries for Solaris (see below)
-* [ ] Create release branch, e.g. '2.9.5-release'
+# Automatic pipelines
+The steps described above are automated using Github actions, but still some manual supervision is required:
+* [ ] Create a release branch, e.g. '2.9.5-release'
+* [ ] Rebuild precompiled libaries: trigger [this pipeline](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) on the release branch. This step may be skipped if rebuilding libraries is not needed or performed outside of the release.
+* [ ] Make sure all artifacts have been pushed to the branch
+    * [ ] Native libraries for PC (Linux / Windows, see below)
+    * [ ] Native libraries for Mac (see below)
+    * [ ] Native libraries for Solaris (see below)
+    * [ ] `jssc.SerialNativeInterface`'s version is up to date with version in `pom.xml` (without `-SNAPSHOT` qualifier)
 * [ ] Trigger [Release New Version](https://github.com/java-native/jssc/actions/workflows/release-new-version.yml) github action
-* [ ] Login to [OSSRH](https://oss.sonatype.org/#stagingRepositories) and verify the artifacts are in good shape. This is the time for last minute integration tests
+* [ ] Login to [OSSRH](https://oss.sonatype.org/#stagingRepositories) and verify the artifacts are in good shape. This is the time for last minute integration tests:
     * [ ] Are compiled classes at bytecode version 50 (Java 6)?
     * [ ] Is there module-info.class in the package?
     * [ ] Are there no undesired entries in jar manifest file?
     * [ ] Is the artifact compatible with maven projects build with jdk7,8,11...17? Note, staging repository is publicly available, and may be included in test project in `<repositories>` section of `pom.xml`.
     * [ ] Is the artifact usable on JRE6...17?
     * [ ] Is the artifact usable on all supported OSes?
-* [ ] Release the artifact from OSSRH staging repository 
-* [ ] Prepare Github release (see below)
-    * [ ] Check out revision tagged during the Maven Release process
-    * [ ] Create build artifact using `mvn -P package,jar-with-dependencies`
-    * [ ] Create release in GitHub releases area, add release notes matching previous release formatting
-    * [ ] Upload build artifact and javadoc artifact
-* [ ] Bump and commit the version in `README.md`
-* [ ] Bump the version in [wiki](Add-Dependency)
-* [ ] Bump and commit the version in `src/java/jssc/SerialNativeInterface.java`
-* [ ] Merge release branch back to master. **Do not** use rebase as to preserve tagged revision.
+    * [ ] Is the version in `README.md` up to date?
+    * [ ] Is the version in the wiki up to date?
+* Check the [Github Releases](https://github.com/java-native/jssc/releases) page 
+    * [ ] Verify the release has been created on the correct tagged commit
+    * [ ] Verify the sources and javadoc jars are included
+    * [ ] Verify jar *with dependencies* is included
+    * [ ] Update release notes in the description
+* [ ] In case of errors with any of the steps so far - you may discard the branch, drop the repository in OSSRH and start over
+* [ ] If all is good:
+    * [ ] Release the artifact from OSSRH staging repository 
+    * [ ] Merge release branch back to master. **Do not** use rebase as to preserve tagged revision.
 
-## Building native libraries
+# Building native libraries manually
 ### Ubuntu (for Linux and Windows)
 * Use oldest possible Ubuntu version (e.g. 14.04) and follow [[Compiling]] or [[Cross-Compilation]] guide respectively.
 * Commit the new `.so` or `.dll` file inside `/src/main/resources-precompiled/natives/linux_64/`, etc.
