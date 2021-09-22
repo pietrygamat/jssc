@@ -1,5 +1,9 @@
 ### Prerequisites
- * JDK7+
+ * Java
+    * JRE6+ required to use the library
+    * JDK8+ required to build the project
+    * Note: build with JDK9+ if you requrire jar compatible with JPMS
+    * Note: build with JDK8-11 if you require backwards compatibility with JRE6, dropped in more recent Java editions
  * C++
    * **Linux:** `g++`, `clang` or equivalent
    * **macOS:** XCode with Command Line Utilities
