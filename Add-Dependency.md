@@ -6,7 +6,7 @@ Add to `pom.xml`
 <dependency>
     <groupId>io.github.java-native</groupId>
     <artifactId>jssc</artifactId>
-    <version>2.9.4</version>
+    <version>2.9.5</version>
 </dependency>
 ```
 
@@ -16,7 +16,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation("io.github.java-native:jssc:2.9.4")
+    implementation("io.github.java-native:jssc:2.9.5")
 }
 ```
 
@@ -26,6 +26,6 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation 'io.github.java-native:jssc:2.9.4'
+    implementation 'io.github.java-native:jssc:2.9.5'
 }
 ```
