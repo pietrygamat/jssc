@@ -1,0 +1,149 @@
+
+
+  Describes the changes I need to apply so I can build jssc the way I
+  want to build it.
+
+
+diff --git a/pom.xml b/pom.xml
+index 82d9e1d..050d011 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -2,14 +2,13 @@
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+ 
+-  <groupId>io.github.java-native</groupId>
++  <groupId>ch.hiddenalpha.playground</groupId>
+   <artifactId>jssc</artifactId>
+   <version>2.9.6-SNAPSHOT</version>
+ 
+   <name>Java Simple Serial Connector</name>
+   <description>
+-    A small, single Java library for working with serial ports across various systems
+-    based on the work from scream3r/java-simple-serial-connector.
++    Fork of https://github.com/java-native/jssc
+   </description>
+   <url>https://github.com/java-native/jssc</url>
+ 
+@@ -96,11 +95,6 @@
+ 
+   <build>
+     <defaultGoal>install</defaultGoal>
+-    <resources>
+-        <resource>
+-          <directory>${project.basedir}/src/main/resources-precompiled</directory>
+-        </resource>
+-    </resources>
+ 
+     <extensions>
+       <extension>
+@@ -636,5 +630,109 @@
+       </build>
+     </profile>
+ 
++    <profile>
++      <id>noCmake</id>
++      <properties>
++        <cmake.build.skip>true</cmake.build.skip>
++        <cmake.compile.skip>true</cmake.compile.skip>
++        <cmake.generate.skip>true</cmake.generate.skip>
++      </properties>
++    </profile>
++
++    <profile>
++      <id>noJavah</id>
++      <properties>
++        <javah.skip>false</javah.skip>
++      </properties>
++    </profile>
++
++    <profile>
++      <id>linux_64</id>
++      <properties>
++        <nativeJar.classifier>linux_64</nativeJar.classifier>
++        <nativeJar.sharedObjectPath>natives/linux_64/libjssc.so</nativeJar.sharedObjectPath>
++      </properties>
++    </profile>
++
++    <profile>
++      <id>windows_64</id>
++      <properties>
++        <nativeJar.classifier>windows_64</nativeJar.classifier>
++        <nativeJar.sharedObjectPath>natives/windows_64/jssc.dll</nativeJar.sharedObjectPath>
++      </properties>
++    </profile>
++
++    <profile>
++      <id>noNatives</id>
++      <build>
++        <plugins>
++          <plugin>
++            <artifactId>maven-jar-plugin</artifactId>
++            <configuration>
++              <excludes>
++                <exclude>natives/**</exclude>
++              </excludes>
++            </configuration>
++          </plugin>
++        </plugins>
++      </build>
++    </profile>
++
++    <profile>
++      <id>nativeJar</id>
++      <properties>
++        <skipTests>true</skipTests>
++      </properties>
++      <build>
++        <resources>
++          <resource>
++            <directory>${project.basedir}/src/main/resources-precompiled</directory>
++          </resource>
++        </resources>
++        <plugins>
++          <plugin>
++            <artifactId>maven-jar-plugin</artifactId>
++            <configuration>
++              <classifier>${nativeJar.classifier}</classifier>
++              <includes>
++                <include>${nativeJar.sharedObjectPath}</include>
++              </includes>
++            </configuration>
++          </plugin>
++        </plugins>
++      </build>
++    </profile>
++
++    <profile>
++      <id>withTestClasspath</id>
++      <build>
++        <plugins>
++          <plugin>
++            <groupId>org.codehaus.mojo</groupId>
++            <artifactId>build-helper-maven-plugin</artifactId>
++            <version>1.12</version>
++            <executions>
++              <execution>
++                <id>add-test-resource</id>
++                <phase>generate-test-sources</phase>
++                <goals><goal>add-test-resource</goal></goals>
++                <configuration>
++                  <resources>
++                    <resource>
++                      <directory>${project.basedir}/src/main/resources-precompiled</directory>
++                      <includes>
++                        <include>natives/${nativeJar.sharedObjectPath}</include>
++                      </includes>
++                    </resource>
++                  </resources>
++                </configuration>
++              </execution>
++            </executions>
++          </plugin>
++        </plugins>
++      </build>
++    </profile>
++
+   </profiles>
++
+ </project>
