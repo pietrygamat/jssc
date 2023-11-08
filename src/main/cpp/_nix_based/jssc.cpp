@@ -534,10 +534,10 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_writeBytes
     jint bufferSize = env->GetArrayLength(buffer);
     jint result = write(portHandle, jBuffer, (size_t)bufferSize);
     if( result == -1 ){
-        const char *emsg = strerror(errno);
+        int err = errno; /*bakup errno*/
         jclass exClz = env->FindClass("java/io/IOException");
         assert(exClz != NULL);
-        env->ThrowNew(exClz, emsg);
+        env->ThrowNew(exClz, strerror(err));
         goto Finally;
     }
     ret = (result == bufferSize) ? JNI_TRUE : JNI_FALSE;
