@@ -39,4 +39,11 @@ public class SerialNativeInterfaceTest {
 
     }
 
+    @Test(expected = java.io.IOException.class)
+    public void reportsWriteErrorsAsIOException() throws Exception {
+        long fd = -1; /*bad file by intent*/
+        byte[] buf = new byte[]{ 0x41, 0x42, 0x43 };
+        new SerialNativeInterface().writeBytes(fd, buf);
+    }
+
 }
