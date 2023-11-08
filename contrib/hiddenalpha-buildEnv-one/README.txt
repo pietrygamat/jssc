@@ -43,7 +43,7 @@ true `# Make` \
       -I/usr/lib/jvm/java-1.8.0-openjdk-amd64/include \
       -I/usr/lib/jvm/java-1.8.0-openjdk-amd64/include/linux \
       -Isrc/main/cpp \
-  && for T in ${targets:?}; do
+  && for T in ${targets:?}; do true \
     && mvn -PnoCmake -PnoJavah -PnativeJar -P"${T:?}" package \
     ;done \
   && mvn -PnoCmake -PnoJavah -PnoNatives -PwithTestClasspath verify \
