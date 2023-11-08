@@ -24,13 +24,15 @@ true `# Configure for debian 9 x86_64` \
   && true
 
 
-true `# Setup` \
+(true `# Setup` \
   && $SUDO apt install -y --no-install-recommends \
         git openjdk-8-jdk-headless g++ maven \
-  && true
+  && true)
 
 
-true `# Make` \
+(true `# Make` \
+  && set -e \
+  && if test -n $BASH_VERSINFO; then set -o posix; fi \
   && cat contrib/hiddenalpha-buildEnv-one/res/pom.patch | git apply \
   && mvn clean \
   && mvn -PnoCmake compile \
@@ -47,6 +49,6 @@ true `# Make` \
     && mvn -PnoCmake -PnoJavah -PnativeJar -P"${T:?}" package \
     ;done \
   && mvn -PnoCmake -PnoJavah -PnoNatives -PwithTestClasspath verify \
-  && true
+  && true)
 
 
