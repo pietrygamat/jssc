@@ -8,9 +8,6 @@ to exclude unwanted bloat never ever needed on specific systems.
 
 Initially written for jssc 2.9.5.
 
-After applying patches from this directory, I use below snippets for
-building.
-
 
 true `# Configure for debian 9 x86_64` \
   && CXX="g++" \
