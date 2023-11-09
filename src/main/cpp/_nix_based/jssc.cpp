@@ -608,9 +608,7 @@ static void awaitReadReady(JNIEnv*, jlong fd){
 JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
   (JNIEnv *env, jobject, jlong portHandle, jint byteCount){
 
-    // TODO: Errors should be communicated by raising java exceptions; Will break
-    //       backwards compatibility.
-
+    int err;
     jbyte *lpBuffer = new jbyte[byteCount];
     jbyteArray returnArray = NULL;
     int byteRemains = byteCount;
@@ -623,8 +621,10 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
         errno = 0;
         result = read(portHandle, lpBuffer + (byteCount - byteRemains), byteRemains);
         if (result < 0) {
-            // man read: On error, -1 is returned, and errno is set to indicate the error.
-            // TODO: May candidate for raising a java exception. See comment at begin of function.
+            err = errno;
+            jclass exClz = env->FindClass("java/io/IOException");
+            if( exClz != NULL ) env->ThrowNew(exClz, strerror(err));
+            returnArray = NULL; goto Finally;
         }
         else if (result == 0) {
             // AFAIK this happens either on EOF or on EWOULDBLOCK (see 'man read').
@@ -637,7 +637,11 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
     }
 
     returnArray = env->NewByteArray(byteCount);
+    if( returnArray == NULL ) goto Finally;
     env->SetByteArrayRegion(returnArray, 0, byteCount, lpBuffer);
+    assert(env->ExceptionCheck() == JNI_FALSE);
+
+Finally:
     delete[] lpBuffer;
     return returnArray;
 }
