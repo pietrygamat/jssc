@@ -829,46 +829,30 @@ const jint events[] = {INTERRUPT_BREAK,
 JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_waitEvents
   (JNIEnv *env, jobject, jlong portHandle) {
 
+    int err;
     jclass intClass = env->FindClass("[I");
     if( intClass == NULL ) return NULL;
     jobjectArray returnArray = env->NewObjectArray(sizeof(events)/sizeof(jint), intClass, NULL);
     if( returnArray == NULL ) return NULL;
 
     /*Input buffer*/
-    jint bytesCountIn = 0;
-    ioctl(portHandle, FIONREAD, &bytesCountIn);
-    
-    /*Output buffer*/
-    jint bytesCountOut = 0;
-    ioctl(portHandle, TIOCOUTQ, &bytesCountOut);
+    jint bytesCountIn = 0, bytesCountOut = 0;
+    err =  ioctl(portHandle, FIONREAD, &bytesCountIn) == -1
+        || ioctl(portHandle, TIOCOUTQ, &bytesCountOut) == -1 ;
+    if( err ){
+        err = errno;
+        jclass exClz = env->FindClass("java/io/IOException");
+        if( exClz != NULL ) env->ThrowNew(exClz, strerror(err));
+        return NULL;
+    }
 
     /*Lines status*/
     int statusLines = getLinesStatus(portHandle);
 
-    jint statusCTS = 0;
-    jint statusDSR = 0;
-    jint statusRING = 0;
-    jint statusRLSD = 0;
-    
-    /*CTS status*/
-    if(statusLines & TIOCM_CTS){
-        statusCTS = 1;
-    }
-
-    /*DSR status*/
-    if(statusLines & TIOCM_DSR){
-        statusDSR = 1;
-    }
-
-    /*RING status*/
-    if(statusLines & TIOCM_RNG){
-        statusRING = 1;
-    }
-
-    /*RLSD(DCD) status*/
-    if(statusLines & TIOCM_CAR){
-        statusRLSD = 1;
-    }
+    jint statusCTS = !!(statusLines & TIOCM_CTS);
+    jint statusDSR = !!(statusLines & TIOCM_DSR);
+    jint statusRING = !!(statusLines & TIOCM_RNG);
+    jint statusRLSD = !!(statusLines & TIOCM_CAR);
 
     /*Interrupts*/
     int interrupts[] = {-1, -1, -1, -1, -1};

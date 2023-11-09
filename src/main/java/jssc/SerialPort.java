@@ -952,7 +952,7 @@ public class SerialPort {
         return serialInterface.sendBreak(portHandle, duration);
     }
 
-    private int[][] waitEvents() {
+    private int[][] waitEvents() throws IOException {
         return serialInterface.waitEvents(portHandle);
     }
 
@@ -1205,7 +1205,12 @@ public class SerialPort {
         @Override
         public void run() {
             while(!threadTerminated){
-                int[][] eventArray = waitEvents();
+                int[][] eventArray;
+                try{
+                    eventArray = waitEvents();
+                }catch( IOException ex ){
+                    throw new RuntimeException("Failed in waitEvents()", ex);
+                }
                 for(int[] event : eventArray){
                     if(event[0] > 0 && !threadTerminated){
                         eventListener.serialEvent(new SerialPortEvent(SerialPort.this, event[0], event[1]));
@@ -1257,7 +1262,12 @@ public class SerialPort {
 
         //Need to get initial states
         public LinuxEventThread(){
-            int[][] eventArray = waitEvents();
+            int[][] eventArray;
+            try{
+                eventArray = waitEvents();
+            }catch( IOException ex ){
+                throw new RuntimeException("Failed in waitEvents()", ex);
+            }
             for(int[] event : eventArray){
                 int eventType = event[0];
                 int eventValue = event[1];
@@ -1296,7 +1306,12 @@ public class SerialPort {
         @Override
         public void run() {
             while(!super.threadTerminated){
-                int[][] eventArray = waitEvents();
+                int[][] eventArray;
+                try{
+                    eventArray = waitEvents();
+                }catch( IOException ex ){
+                    throw new RuntimeException("Failed in waitEvents()", ex);
+                }
                 int mask = getLinuxMask();
                 boolean interruptTxChanged = false;
                 int errorMask = 0;
