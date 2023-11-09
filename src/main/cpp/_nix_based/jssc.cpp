@@ -530,8 +530,14 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setDTR
  */
 JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_writeBytes
   (JNIEnv *env, jobject, jlong portHandle, jbyteArray buffer){
+    if( buffer == NULL ){
+        jclass exClz = env->FindClass("java/lang/NullPointerException");
+        if( exClz != NULL ) env->ThrowNew(exClz, "buffer");
+        return 0;
+    }
     jboolean ret = JNI_FALSE;
     jbyte* jBuffer = env->GetByteArrayElements(buffer, JNI_FALSE);
+    if( jBuffer == NULL ) return 0;
     jint bufferSize = env->GetArrayLength(buffer);
     jint result = write(portHandle, jBuffer, (size_t)bufferSize);
     if( result == -1 ){
