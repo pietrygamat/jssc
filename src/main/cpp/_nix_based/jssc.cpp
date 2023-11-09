@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <time.h>
@@ -641,12 +642,22 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
  */
 JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getBuffersBytesCount
   (JNIEnv *env, jobject, jlong portHandle){
+    int err;
     jint returnValues[2];
     returnValues[0] = -1; //Input buffer
     returnValues[1] = -1; //Output buffer
+
+    err = ioctl(portHandle, FIONREAD, &returnValues[0]) == -1
+       || ioctl(portHandle, TIOCOUTQ, &returnValues[1]) == -1;
+    if( err ){
+        err = errno;
+        jclass exClz = env->FindClass("java/io/IOException");
+        if( exClz != NULL ) env->ThrowNew(exClz, strerror(err));
+        return NULL;
+    }
+
     jintArray returnArray = env->NewIntArray(2);
-    ioctl(portHandle, FIONREAD, &returnValues[0]);
-    ioctl(portHandle, TIOCOUTQ, &returnValues[1]);
+    if( returnArray == NULL ) return NULL;
     env->SetIntArrayRegion(returnArray, 0, 2, returnValues);
     return returnArray;
 }
