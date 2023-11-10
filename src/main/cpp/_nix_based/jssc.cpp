@@ -537,7 +537,11 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_writeBytes
     }
     jboolean ret = JNI_FALSE;
     jbyte* jBuffer = env->GetByteArrayElements(buffer, JNI_FALSE);
-    if( jBuffer == NULL ) return 0;
+    if( jBuffer == NULL ){
+        jclass exClz = env->FindClass("java/lang/RuntimeException");
+        if( exClz != NULL ) env->ThrowNew(exClz, "jni->GetByteArrayElements() failed");
+        return 0;
+    }
     jint bufferSize = env->GetArrayLength(buffer);
     jint result = write(portHandle, jBuffer, (size_t)bufferSize);
     if( result == -1 ){
