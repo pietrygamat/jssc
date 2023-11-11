@@ -12,6 +12,7 @@ Initially written for jssc 2.9.5.
 true `# Configure for debian 9 x86_64` \
   && CXX="g++" \
   && CFLAGS="-fPIC -Wall -pedantic -Werror \
+      -ggdb -O0 \
       -Wno-error=long-long \
       -Wno-error=sign-compare \
       -Wno-error=variadic-macros \
@@ -23,7 +24,7 @@ true `# Configure for debian 9 x86_64` \
 
 (true `# Setup` \
   && $SUDO apt install -y --no-install-recommends \
-        git openjdk-8-jdk-headless g++ maven \
+        git openjdk-8-jdk-headless g++ maven gdb \
   && true)
 
 
@@ -48,4 +49,17 @@ true `# Configure for debian 9 x86_64` \
   && mvn -PnoCmake -PnoJavah -PnoNatives -PwithTestClasspath verify \
   && true)
 
+
+## gdb
+
+true `# run this before starting gdb` \
+  && m2repo="/home/${USER:?}/.m2/repository" \
+  && PROJDIR="/home/${USER:?}/jssc-work" \
+  && export LD_LIBRARY_PATH="${PROJDIR:?}/src/main/resources-precompiled/natives/linux_64" \
+  && export CLASSPATH="target/test-classes:target/classes\
+:${m2repo:?}/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar\
+:${m2repo:?}/org/slf4j/slf4j-simple/1.7.30/slf4j-simple-1.7.30.jar\
+:${m2repo:?}/org/scijava/native-lib-loader/2.4.0/native-lib-loader-2.4.0.jar\
+" \
+  && true
 

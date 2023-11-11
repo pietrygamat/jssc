@@ -25,6 +25,22 @@ index 82d9e1d..050d011 100644
    </description>
    <url>https://github.com/java-native/jssc</url>
  
+diff --git a/pom.xml b/pom.xml
+index 5229404..22cfec7 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -75,6 +74,11 @@
+   </properties>
+ 
+   <dependencies>
++    <dependency>
++      <groupId>org.slf4j</groupId>
++      <artifactId>slf4j-simple</artifactId>
++      <version>1.7.30</version>
++    </dependency>
+     <dependency>
+       <groupId>org.scijava</groupId>
+       <artifactId>native-lib-loader</artifactId>
 @@ -96,11 +95,6 @@
  
    <build>
