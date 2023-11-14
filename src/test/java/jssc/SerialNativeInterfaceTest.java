@@ -67,4 +67,14 @@ public class SerialNativeInterfaceTest {
         }
     }
 
+    @Test
+    public void throwsIllegalArgumentExceptionIfPortHandleIllegal() throws Exception {
+        try{
+            testTarget.readBytes(999, 42);
+            fail("Where is the exception?");
+        }catch( IllegalArgumentException ex ){
+            assertTrue(ex.getMessage().contains("EBADF"));
+        }
+    }
+
 }
