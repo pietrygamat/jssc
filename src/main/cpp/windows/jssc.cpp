@@ -236,9 +236,19 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_writeBytes
     HANDLE hComm = (HANDLE)portHandle;
     DWORD lpNumberOfBytesTransferred;
     DWORD lpNumberOfBytesWritten;
-    OVERLAPPED *overlapped = new OVERLAPPED();
     jboolean returnValue = JNI_FALSE;
+    if( buffer == NULL ){
+        jclass exClz = env->FindClass("java/lang/NullPointerException");
+        if( exClz != NULL ) env->ThrowNew(exClz, "buffer");
+        return 0;
+    }
     jbyte* jBuffer = env->GetByteArrayElements(buffer, JNI_FALSE);
+    if( jBuffer == NULL ){
+        jclass exClz = env->FindClass("java/lang/RuntimeException");
+        if( exClz != NULL ) env->ThrowNew(exClz, "jni->GetByteArrayElements() failed");
+        return 0;
+    }
+    OVERLAPPED *overlapped = new OVERLAPPED();
     overlapped->hEvent = CreateEventA(NULL, true, false, NULL);
     if(WriteFile(hComm, jBuffer, (DWORD)env->GetArrayLength(buffer), &lpNumberOfBytesWritten, overlapped)){
         returnValue = JNI_TRUE;
