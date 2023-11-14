@@ -33,7 +33,7 @@ true `# Configure for debian 9 x86_64` \
   && if test -n $BASH_VERSINFO; then set -o posix; fi \
   && cat contrib/hiddenalpha-buildEnv-one/res/pom.patch | git apply \
   && mvn clean \
-  && mvn -PnoCmake compile \
+  && mvn -PnoCmake test-compile \
   && printf '%s "%s"\n' "#define JSSC_VERSION" "$(git describe --tags|sed 's,^v,,')" \
       > src/main/cpp/version.h \
   && mkdir -p src/main/resources-precompiled/natives/linux_64 \
@@ -60,6 +60,7 @@ true `# run this before starting gdb` \
 :${m2repo:?}/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar\
 :${m2repo:?}/org/slf4j/slf4j-simple/1.7.30/slf4j-simple-1.7.30.jar\
 :${m2repo:?}/org/scijava/native-lib-loader/2.4.0/native-lib-loader-2.4.0.jar\
+:${m2repo:?}/junit/junit/4.12/junit-4.12.jar\
 " \
   && true
 
