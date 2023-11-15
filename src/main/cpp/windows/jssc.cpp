@@ -298,7 +298,7 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
             }
         }
     }
-    else if(GetLastError() == ERROR_HANDLE_INVALID){
+    else if(GetLastError() == ERROR_INVALID_HANDLE){
         jclass exClz = env->FindClass("java/lang/IllegalArgumentException");
         if( exClz != NULL ) env->ThrowNew(exClz, "EBADF");
     }
