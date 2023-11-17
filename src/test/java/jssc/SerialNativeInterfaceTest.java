@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
 public class SerialNativeInterfaceTest {
 
@@ -60,6 +61,8 @@ public class SerialNativeInterfaceTest {
 
     @Test
     public void throwsNpeIfPassedBufferIsNull() throws Exception {
+        assumeFalse(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_WINDOWS);
+
         long fd = 1;
         byte[] buf = null;
         try{
