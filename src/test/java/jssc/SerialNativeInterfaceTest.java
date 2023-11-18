@@ -61,8 +61,6 @@ public class SerialNativeInterfaceTest {
 
     @Test
     public void throwsNpeIfPassedBufferIsNull() throws Exception {
-        assumeFalse(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_WINDOWS);
-
         long fd = 1;
         byte[] buf = null;
         try{
@@ -75,6 +73,8 @@ public class SerialNativeInterfaceTest {
 
     @Test
     public void throwsIllegalArgumentExceptionIfPortHandleIllegal() throws Exception {
+        assumeFalse(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_WINDOWS);
+
         try{
             testTarget.readBytes(999, 42);
             fail("Where is the exception?");
