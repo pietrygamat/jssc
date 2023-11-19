@@ -10,7 +10,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
 
 public class SerialNativeInterfaceTest {
 
@@ -73,8 +72,6 @@ public class SerialNativeInterfaceTest {
 
     @Test
     public void throwsIllegalArgumentExceptionIfPortHandleIllegal() throws Exception {
-        assumeFalse(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_WINDOWS);
-
         try{
             testTarget.readBytes(999, 42);
             fail("Where is the exception?");
