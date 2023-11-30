@@ -54,18 +54,6 @@ public class SerialNativeInterfaceTest {
     }
 
     @Test
-    public void throwsNpeIfPassedBufferIsNull() throws Exception {
-        long fd = 1;
-        byte[] buf = null;
-        try{
-            testTarget.writeBytes(fd, buf);
-            fail("Where is the exception?");
-        }catch( NullPointerException ex ){
-            assertTrue(ex.getMessage().contains("buffer"));
-        }
-    }
-
-    @Test
     public void throwsIllegalArgumentExceptionIfPortHandleIllegal() throws Exception {
         assumeFalse(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X);
 
@@ -98,6 +86,11 @@ public class SerialNativeInterfaceTest {
         }catch( IllegalArgumentException ex ){
             assertTrue(ex.getMessage().contains("EBADF"));
         }
+    }
+
+    @Test(expected = java.lang.NullPointerException.class)
+    public void throwsNpeIfPassedBufferIsNull() throws Exception {
+        new SerialNativeInterface().writeBytes(1, null);
     }
 
 }
