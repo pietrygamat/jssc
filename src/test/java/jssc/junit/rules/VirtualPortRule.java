@@ -32,16 +32,18 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import jssc.SerialNativeInterface;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class VirtualPortRule implements TestRule {
 
-  private static final Logger LOG = LoggerFactory.getLogger(VirtualPortRule.class);
+  private static final Logger LOG = LogManager.getLogger(VirtualPortRule.class);
 
   private static final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -97,7 +99,7 @@ public class VirtualPortRule implements TestRule {
         } finally {
           // stop socat
           for (final Future<?> process : VirtualPortRule.this.processes) {
-            process.cancel(false);
+            process.cancel(true);
           }
 
           executor.shutdown();
