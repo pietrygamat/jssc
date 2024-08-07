@@ -4,44 +4,48 @@
   want to build it.
 
 
-diff --git a/pom.xml b/pom.xml
-index 82d9e1d..050d011 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -2,14 +2,13 @@
- <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+@@ -3,5 +3,5 @@
    <modelVersion>4.0.0</modelVersion>
  
 -  <groupId>io.github.java-native</groupId>
 +  <groupId>ch.hiddenalpha.playground</groupId>
    <artifactId>jssc</artifactId>
    <version>2.9.6-SNAPSHOT</version>
- 
-   <name>Java Simple Serial Connector</name>
+@@ -10,4 +10,3 @@
    <description>
 -    A small, single Java library for working with serial ports across various systems
 -    based on the work from scream3r/java-simple-serial-connector.
 +    Fork of https://github.com/java-native/jssc
    </description>
-   <url>https://github.com/java-native/jssc</url>
+@@ -38,4 +37,6 @@
+   <properties>
+     <target.java.version>6</target.java.version>
++    <maven.compiler.source>6</maven.compiler.source>
++    <maven.compiler.target>6</maven.compiler.target>
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
  
-diff --git a/pom.xml b/pom.xml
-index 5229404..22cfec7 100644
---- a/pom.xml
-+++ b/pom.xml
-@@ -75,6 +74,11 @@
-   </properties>
+@@ -66,7 +67,7 @@
+     <plugin.gpg.version>3.0.1</plugin.gpg.version>
+     <plugin.jar.version>3.1.1</plugin.jar.version>
+     <plugin.javadoc.version>3.1.1</plugin.javadoc.version>
+-    <plugin.nar.version>3.6.0</plugin.nar.version>
++    <plugin.nar.version>3.10.1</plugin.nar.version>
+     <plugin.nexus-staging.version>1.6.7</plugin.nexus-staging.version>
+     <plugin.osmaven.version>1.7.0</plugin.osmaven.version>
+     <plugin.release.version>3.0.0-M4</plugin.release.version>
+@@ -78,3 +79,9 @@
  
    <dependencies>
 +    <dependency>
 +      <groupId>org.slf4j</groupId>
 +      <artifactId>slf4j-simple</artifactId>
 +      <version>1.7.30</version>
++      <scope>test</scope>
 +    </dependency>
      <dependency>
-       <groupId>org.scijava</groupId>
-       <artifactId>native-lib-loader</artifactId>
-@@ -96,11 +95,6 @@
+@@ -104,11 +111,6 @@
  
    <build>
      <defaultGoal>install</defaultGoal>
@@ -53,7 +57,7 @@ index 5229404..22cfec7 100644
  
      <extensions>
        <extension>
-@@ -636,5 +630,109 @@
+@@ -691,5 +693,109 @@
        </build>
      </profile>
  
@@ -163,3 +167,6 @@ index 5229404..22cfec7 100644
    </profiles>
 +
  </project>
+
+
+

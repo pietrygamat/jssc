@@ -9,50 +9,70 @@ to exclude unwanted bloat never ever needed on specific systems.
 Initially written for jssc 2.9.5.
 
 
-true `# Configure for debian 9 x86_64` \
+## Configure for x86_64 on deb10
+
   && CXX="g++" \
-  && CFLAGS="-fPIC -Wall -pedantic -Werror \
-      -ggdb -O0 \
+  && CFLAGS="-fPIC -Wall -Wextra -Werror -pedantic \
+      -Os -s \
       -Wno-error=long-long \
       -Wno-error=sign-compare \
       -Wno-error=variadic-macros \
       -Wno-long-long" \
-  && targets="linux_64" \
   && SUDO=sudo \
-  && true
 
 
-(true `# Setup` \
+## Configure for x86_64 win on deb10
+
+  && CXX="x86_64-w64-mingw32-g++" \
+  && CFLAGS="-fPIC -Wall -Wextra -Werror -pedantic \
+      -Os -s \
+      -Wno-error=long-long \
+      -Wno-error=sign-compare \
+      -Wno-error=variadic-macros \
+      -Wno-long-long" \
+  && SUDO=sudo \
+  && CACHEDIR=/var/tmp \
+  && SDKMAN_VERSION=5.18.2 \
+
+
+## Setup (originally was jdk8, but not avail anymore)
+
   && $SUDO apt install -y --no-install-recommends \
-        git openjdk-8-jdk-headless g++ maven gdb \
-  && true)
+        curl git g++ maven gdb patch zip unzip \
+  && curl -s "https://get.sdkman.io" | bash \
+  && source "$HOME/.sdkman/bin/sdkman-init.sh" \
+  && sdk install java 8.0.422-amzn \
 
 
-(true `# Make` \
-  && set -e \
+## Make
+
   && if test -n $BASH_VERSINFO; then set -o posix; fi \
-  && cat contrib/hiddenalpha-buildEnv-one/res/pom.patch | git apply \
+  && cat contrib/hiddenalpha-buildEnv-one/res/pom.patch | patch -p 1 \
   && mvn clean \
+  && rm -rf src/main/resources-precompiled/natives/* \
+  && mkdir src/main/resources-precompiled/natives/linux_64 \
   && mvn -PnoCmake test-compile \
-  && printf '%s "%s"\n' "#define JSSC_VERSION" "$(git describe --tags|sed 's,^v,,')" \
+  && PROJECT_VERSION="$(git describe --tags|sed 's,^v,,')" \
+  && printf '%s "%s"\n' "#define JSSC_VERSION" "${PROJECT_VERSION:?}" \
       > src/main/cpp/version.h \
-  && mkdir -p src/main/resources-precompiled/natives/linux_64 \
   && g++ $CFLAGS -shared \
       -o src/main/resources-precompiled/natives/linux_64/libjssc.so \
       src/main/cpp/_nix_based/jssc.cpp \
-      -I/usr/lib/jvm/java-1.8.0-openjdk-amd64/include \
-      -I/usr/lib/jvm/java-1.8.0-openjdk-amd64/include/linux \
+      -I/usr/lib/jvm/java-1.17.0-openjdk-amd64/include \
+      -I/usr/lib/jvm/java-1.17.0-openjdk-amd64/include/linux \
       -Isrc/main/cpp \
-  && for T in ${targets:?}; do true \
+  && for T in "linux_64"; do true \
     && mvn -PnoCmake -PnoJavah -PnativeJar -P"${T:?}" package \
     ;done \
   && mvn -PnoCmake -PnoJavah -PnoNatives -PwithTestClasspath verify \
-  && true)
 
 
 ## gdb
 
-true `# run this before starting gdb` \
+For debugging, adjust CFLAGS to include debugger info and re-compile.
+
+Then run this before starting gdb.
+
   && m2repo="/home/${USER:?}/.m2/repository" \
   && PROJDIR="/home/${USER:?}/jssc-work" \
   && export LD_LIBRARY_PATH="${PROJDIR:?}/src/main/resources-precompiled/natives/linux_64" \
@@ -62,5 +82,5 @@ true `# run this before starting gdb` \
 :${m2repo:?}/org/scijava/native-lib-loader/2.4.0/native-lib-loader-2.4.0.jar\
 :${m2repo:?}/junit/junit/4.12/junit-4.12.jar\
 " \
-  && true
+
 
