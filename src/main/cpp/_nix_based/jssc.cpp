@@ -662,18 +662,23 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
     int byteRemains = byteCount;
 
     if( byteCount < 0 ){
+        char emsg[32]; emsg[0] = '\0';
+        snprintf(emsg, sizeof emsg, "new byte[%d]", byteCount);
         jclass exClz = env->FindClass("java/lang/IllegalArgumentException");
-        char emsg[48];
-        err = snprintf(emsg, sizeof emsg, "Negative byteCount useless: %d", byteCount);
-        if( exClz != NULL && err > 0 ) env->ThrowNew(exClz, emsg);
+        if( exClz != NULL ) env->ThrowNew(exClz, emsg);
         returnArray = NULL; goto Finally;
     }
-    lpBuffer = new jbyte[byteCount];
+
+    try{
+        lpBuffer = new jbyte[byteCount];
+    }catch( const std::bad_alloc& ex ){
+        lpBuffer = NULL;
+    }
     if( lpBuffer == NULL ){
+        char emsg[32]; emsg[0] = '\0';
+        snprintf(emsg, sizeof emsg, "new byte[%d]", byteCount);
         jclass exClz = env->FindClass("java/lang/OutOfMemoryError");
-        char emsg[32];
-        err = snprintf(emsg, sizeof emsg, "new byte[%d]", byteCount);
-        if( exClz != NULL && err > 0 ) env->ThrowNew(exClz, emsg);
+        if( exClz != NULL ) env->ThrowNew(exClz, emsg);
         returnArray = NULL; goto Finally;
     }
 
