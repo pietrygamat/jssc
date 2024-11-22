@@ -657,9 +657,25 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
   (JNIEnv *env, jobject, jlong portHandle, jint byteCount){
 
     int err;
-    jbyte *lpBuffer = new jbyte[byteCount];
+    jbyte *lpBuffer = NULL;
     jbyteArray returnArray = NULL;
     int byteRemains = byteCount;
+
+    if( byteCount < 0 ){
+        jclass exClz = env->FindClass("java/lang/IllegalArgumentException");
+        char emsg[48];
+        err = snprintf(emsg, sizeof emsg, "Negative byteCount useless: %d", byteCount);
+        if( exClz != NULL && err > 0 ) env->ThrowNew(exClz, emsg);
+        returnArray = NULL; goto Finally;
+    }
+    lpBuffer = new jbyte[byteCount];
+    if( lpBuffer == NULL ){
+        jclass exClz = env->FindClass("java/lang/OutOfMemoryError");
+        char emsg[32];
+        err = snprintf(emsg, sizeof emsg, "new byte[%d]", byteCount);
+        if( exClz != NULL && err > 0 ) env->ThrowNew(exClz, emsg);
+        returnArray = NULL; goto Finally;
+    }
 
     while(byteRemains > 0) {
         int result = 0;
@@ -707,7 +723,7 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
     assert(env->ExceptionCheck() == JNI_FALSE);
 
 Finally:
-    delete[] lpBuffer;
+    if( lpBuffer != NULL ) delete[] lpBuffer;
     return returnArray;
 }
 

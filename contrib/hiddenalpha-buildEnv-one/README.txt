@@ -56,10 +56,11 @@ Initially written for jssc 2.9.5.
 
 ## Make
 
+  && TARGET= `# choose: linux_64, windows_64, ... ` \
   && cat contrib/hiddenalpha-buildEnv-one/res/pom.patch | patch -p 1 \
   && mvn clean \
   && rm -rf src/main/resources-precompiled/natives/* \
-  && mkdir src/main/resources-precompiled/natives/windows_64 \
+  && mkdir "src/main/resources-precompiled/natives/${TARGET:?}" \
   && mvn -PnoCmake test-compile \
   && PROJECT_VERSION="$(git describe --tags|sed 's,^v,,')" \
   && printf '%s "%s"\n' "#define JSSC_VERSION" "${PROJECT_VERSION:?}" \
@@ -70,9 +71,7 @@ Initially written for jssc 2.9.5.
       -I$HOME/.sdkman/candidates/java/current/include \
       -I${JNI_MD_INCDIR:?} \
       -Isrc/main/cpp \
-  && for T in "windows_64"; do true \
-    && mvn -PnoCmake -PnoJavah -PnativeJar -P"${T:?}" package \
-    ;done \
+  && mvn -PnoCmake -PnoJavah -PnativeJar -P"${TARGET:?}" package \
   && mvn -PnoCmake -PnoJavah -PnoNatives -PwithTestClasspath verify \
   && SUMFILE="$(cd target && ls -d jssc-*|sort|tail -n1)" \
   && SUMFILE="${SUMFILE%.jar*}.sha256" \
