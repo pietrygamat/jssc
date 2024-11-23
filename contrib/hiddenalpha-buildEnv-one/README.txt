@@ -18,7 +18,7 @@ Initially written for jssc 2.9.5.
       -Wno-error=sign-compare \
       -Wno-error=variadic-macros \
       -Wno-long-long" \
-  && PKGSTOADD="curl git g++ maven gdb patch zip unzip" \
+  && PKGSTOADD="curl git g++ make cmake maven gdb patch zip unzip" \
   && SUDO=sudo \
   && JSSC_CPP=src/main/cpp/_nix_based/jssc.cpp \
   && LIBJSSC_SO=src/main/resources-precompiled/natives/linux_64/libjssc.so \
@@ -76,6 +76,12 @@ Initially written for jssc 2.9.5.
   && SUMFILE="$(cd target && ls -d jssc-*|sort|tail -n1)" \
   && SUMFILE="${SUMFILE%.jar*}.sha256" \
   && (cd target && sha256sum -b jssc-*.jar > "${SUMFILE:?}") \
+
+
+
+## Use maven
+
+  && mvn -Px86_64 ...
 
 
 ## gdb
