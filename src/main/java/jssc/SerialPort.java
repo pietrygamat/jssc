@@ -28,6 +28,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 
+import org.slf4j.Logger;
+
+import static org.slf4j.LoggerFactory.getLogger;
+
 /**
  *
  * @author scream3r
@@ -35,6 +39,7 @@ import java.lang.reflect.Method;
 @SuppressWarnings("unused")
 public class SerialPort {
 
+    private static final Logger log = getLogger(SerialPort.class);
     private final SerialNativeInterface serialInterface;
     private SerialPortEventListener eventListener;
     private volatile long portHandle;
@@ -1206,10 +1211,19 @@ public class SerialPort {
         public void run() {
             while(!threadTerminated){
                 int[][] eventArray;
-                try{
+                try {
                     eventArray = waitEvents();
-                }catch( IOException ex ){
-                    throw new RuntimeException("Failed in waitEvents()", ex);
+                } catch (IOException ex) {
+                    if (log.isDebugEnabled()) log.warn("waitEvents() failed", ex);
+                    else log.warn("waitEvents() failed: {}", ex.getMessage());
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ex) {
+                        log.debug("Got interrupted", ex);
+                        Thread.currentThread().interrup();
+                        threadTerminated = true;
+                    }
+                    continue;
                 }
                 for(int[] event : eventArray){
                     if(event[0] > 0 && !threadTerminated){
