@@ -3,9 +3,10 @@
 ## Configure
 
   && SUDO=sudo \
-  && MVN=mvn -q \
+  && MVN="mvn -q" \
   && TRIPLET=x86_64-linux-gnu \
   && WORKDIR="/home/${USER:?}/work" \
+  && PROJECT_VERSION="$(git describe --tags|sed -E 's,^v,,')" \
 
 
 ## Setup build machine
@@ -33,10 +34,14 @@
       && printf '\nENOTSUP: %s\n\n' "${TRIPLET:?}" && false \
     ;fi  \
   && cat contrib/hiddenalpha-release/res/*.patch | patch -p1 --force \
+  && ${MVN:?} versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion="${PROJECT_VERSION:?}" \
+  && `# see "https://github.com/java-native/jssc/blob/v2.9.6/.github/workflows/cross-compile.yml#L21" ` \
+  && sed -i -E "s,(private +static +final +String +libVersion +=).*$,\1 \"${PROJECT_VERSION:?}\";," \
+         "src/main/java/jssc/SerialNativeInterface.java" \
   && ${MVN:?} clean \
   && ${MVN:?} "-P${MVN_ARCH:?}" test \
   && ${MVN:?} "-P${MVN_ARCH:?}" -Ppack-java-only -DskipTests package \
-  && jarBlanked="$(basename "$(ls -d target/jssc-*.jar|grep -E 'jssc-[^-]+(-[^-]+)?.jar')")" \
+  && jarBlanked="$(basename "$(ls -d target/jssc-*.jar|grep -v -E ".*${CLASSIFIER_OLD:?}")")" \
   && mv "target/${jarBlanked:?}" "target/pack-java-only.jar" `# hide from maven` \
   && ${MVN:?} "-P${MVN_ARCH:?}" -Ppack-native-only -DskipTests package \
   && jarClassifiedOld="$(basename "$(ls -d target/jssc-*.jar|grep -vE 'jssc-[^-]+(-[^-]+)?.jar')")" \
