@@ -117,7 +117,12 @@ jobs:
                 --env MAVEN_OPTS=${MAVEN_OPTS} \
                 ${{ matrix.image }} \
                 bash -c \
-                  'apt-get update && apt-get install --yes maven openjdk-11-jdk-headless && \
+                  'wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
+                    | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null && \
+                   echo "deb https://packages.adoptium.net/artifactory/deb \
+                    $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" \
+                    | tee /etc/apt/sources.list.d/adoptium.list && \
+                   apt-get update && apt-get install --yes maven temurin-17-jdk && \
                    mvn -B clean install -P dockcross,update-resources-precompiled \
                     -Dos.target.name=${{ matrix.os_target_name }} \
                     -Dos.target.arch=${{ matrix.os_target_arch }} \
