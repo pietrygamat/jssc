@@ -1213,14 +1213,14 @@ public class SerialPort {
                 int[][] eventArray;
                 try {
                     eventArray = waitEvents();
-                } catch (IOException ex) {
-                    if (log.isDebugEnabled()) log.warn("waitEvents() failed", ex);
-                    else log.warn("waitEvents() failed: {}", ex.getMessage());
+                } catch (IOException ex1) {
+                    if (log.isDebugEnabled()) log.warn("waitEvents() failed", ex1);
+                    else log.warn("waitEvents() failed: {}", ex1.getMessage());
                     try {
                         Thread.sleep(500);
-                    } catch (InterruptedException ex) {
-                        log.debug("Got interrupted", ex);
-                        Thread.currentThread().interrup();
+                    } catch (InterruptedException ex2) {
+                        log.debug("Got interrupted", ex2);
+                        Thread.currentThread().interrupt();
                         threadTerminated = true;
                     }
                     continue;
