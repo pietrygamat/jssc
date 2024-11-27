@@ -1,0 +1,45 @@
+
+
+--- a/pom.xml
++++ b/pom.xml
+@@ -691,6 +691,40 @@
+       </build>
+     </profile>
+ 
++    <profile>
++      <id>pack-native-only</id>
++      <build>
++        <plugins>
++          <plugin>
++            <groupId>org.apache.maven.plugins</groupId>
++            <artifactId>maven-jar-plugin</artifactId>
++            <version>3.4.2</version>
++            <configuration>
++              <includes>
++                <include>natives/**</include>
++              </includes>
++            </configuration>
++          </plugin>
++        </plugins>
++      </build>
++    </profile>
++    <profile>
++      <id>pack-java-only</id>
++      <build>
++        <plugins>
++          <plugin>
++            <groupId>org.apache.maven.plugins</groupId>
++            <artifactId>maven-jar-plugin</artifactId>
++            <version>3.4.2</version>
++            <configuration>
++              <includes>
++                <include>jssc/**</include>
++              </includes>
++            </configuration>
++          </plugin>
++        </plugins>
++      </build>
++    </profile>
+   </profiles>
+ </project>
+

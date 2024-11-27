@@ -1,0 +1,86 @@
+name: Artifacts Patched By hiddenalpha
+
+#on: workflow_dispatch
+#on:
+#  push:
+#    tags:
+#      - 'v[0-9]*.[0-9]*.[0-9]*'
+
+jobs:
+
+# local snk = io.stdout
+# local build = function(mvnProfile, target, host, setup)
+#     snk:write(""
+#       .. "  ".. target .."-".. mvnProfile ..":\n"
+#       .. "    runs-on: ".. host .."-latest\n"
+#       .. "    steps:\n"
+#       .. "      - name: Checkout repository\n"
+#       .. "        uses: actions/checkout@v3\n"
+#       .. "      - name: Set up build environment\n"
+#       .. "        run: ".. setup .."\n"
+#       .. "      - name: Build the project\n"
+#       .. "        run: |\n"
+#       -- Effective artifacts seen:
+#       --  - "jssc-2.9.7-SNAPSHOT-linux-x86_64-64.jar"
+#       --  - "jssc-2.9.7-SNAPSHOT-linux-x86_64-64.jar"
+#       .. "          mvn -P ".. mvnProfile .." clean verify\n"
+#       .. "          ls -Ahl target\n"
+#       .. "      - name: Upload build artifact\n"
+#       .. "        uses: actions/upload-artifact@v4\n"
+#       .. "        with:\n"
+#       .. "          name: ".. target .."-".. mvnProfile ..".jar\n"
+#       .. "          path: target/jssc-*".. target ..".jar\n"
+#       )
+# end
+# local setupLinux = "true"
+#         .." && sudo apt-get update"
+#         .." && sudo apt-get install --no-install-recommends -y"
+#         ..     " maven cmake make g++"
+# local setupWindoof = "choco install visualstudio2019community"
+# local setupMacos = "brew install clang socat"
+# build("x86_64", "linux", "linux", setupLinux)
+# build("x86", "linux", "linux", setupLinux)
+# -- TODO build("aarch64", )
+# -- TODO buildWindoof("mingw64")
+# -- TODO buildWindoof("mingwaarch64")
+# -- TODO buildWindoof("mingw32")
+# -- TODO build("riscv64")
+# -- TODO build("riscv32")
+# -- TODO build("ppc64")
+# -- TODO build("armhf")
+# -- TODO build("armsf")
+
+
+
+  linux-x86_64:
+    runs-on: linux-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up build environment
+        run: true && sudo apt-get update && sudo apt-get install --no-install-recommends -y maven cmake make g++
+      - name: Build the project
+        run: |
+          mvn -P x86_64 clean verify
+          ls -Ahl target
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64.jar
+          path: target/jssc-*linux.jar
+  linux-x86:
+    runs-on: linux-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up build environment
+        run: true && sudo apt-get update && sudo apt-get install --no-install-recommends -y maven cmake make g++
+      - name: Build the project
+        run: |
+          mvn -P x86 clean verify
+          ls -Ahl target
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86.jar
+          path: target/jssc-*linux.jar

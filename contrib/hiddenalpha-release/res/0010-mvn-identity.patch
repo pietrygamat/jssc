@@ -1,0 +1,21 @@
+
+  Change maven identity.
+
+--- a/pom.xml
++++ b/pom.xml
+@@ -3,5 +3,5 @@
+   <modelVersion>4.0.0</modelVersion>
+ 
+-  <groupId>io.github.java-native</groupId>
++  <groupId>ch.hiddenalpha.playground</groupId>
+   <artifactId>jssc</artifactId>
+   <version>2.9.6-SNAPSHOT</version>
+@@ -10,4 +10,4 @@
+   <description>
+-    A small, single Java library for working with serial ports across various systems
+-    based on the work from scream3r/java-simple-serial-connector.
++    Fork of
++    https://github.com/java-native/jssc
+   </description>
+
+
