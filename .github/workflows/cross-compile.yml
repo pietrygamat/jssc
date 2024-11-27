@@ -134,7 +134,7 @@ jobs:
           while  git pull --rebase && ! git push; do sleep 5; done
 
   macos:
-    runs-on: macos-11
+    runs-on: macos-latest
     needs: create-branch
     strategy:
       matrix:
@@ -162,8 +162,9 @@ jobs:
       - name: Get oldest supported SDK
         if: ${{ matrix.sdk-version == 'MacOSX10.9.sdk' }}
         run: |
+          env | grep XCODE
           wget -qO- https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX10.9.sdk.tar.xz \
-            | tar -xjv -C $XCODE_12_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs
+            | tar -xjv -C $XCODE_16_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs
 
       - name: Set SDK version
         run: |
