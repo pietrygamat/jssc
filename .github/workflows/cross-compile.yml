@@ -166,9 +166,11 @@ jobs:
 
       - name: Set SDK version
         run: |
+          ls -al $XCODE_16_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs
           export MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos-deployment-target }}
           export SDKROOT=$XCODE_16_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs/${{ matrix.sdk-version }}
           export CMAKE_OSX_SYSROOT=$SDKROOT
+          echo $CMAKE_OSX_SYSROOT
       - name: Build with Maven
         run: mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled
 
