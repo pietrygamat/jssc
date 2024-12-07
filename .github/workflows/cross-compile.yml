@@ -141,7 +141,7 @@ jobs:
         include:
           - target: osx_64
             profile: 'x86_64'
-            macos-deployment-target: 10.8
+            macos-deployment-target: 10.9
             sdk-version: MacOSX10.9.sdk
 
           - target: osx_arm64
@@ -169,6 +169,9 @@ jobs:
           export MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos-deployment-target }}
           export SDKROOT=$XCODE_16_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs/${{ matrix.sdk-version }}
           export CMAKE_OSX_SYSROOT=$SDKROOT
+          echo "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET" >> $GITHUB_ENV
+          echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
+          echo "CMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT" >> $GITHUB_ENV
       - name: Build with Maven
         run: mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled
 
