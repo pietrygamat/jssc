@@ -247,7 +247,7 @@
         </condition>
 
         <!-- Retreive minos value (macOS only) -->
-        <condition property="exec.argline" value="otool -l '${native.file.unix}' |grep minos|xargs" else="echo">
+        <condition property="exec.argline" value="otool -l '${native.file.unix}' |grep minos|xargs" else="cd .">
             <equals arg1="${os.target.name}" arg2="osx"/>
         </condition>
 
