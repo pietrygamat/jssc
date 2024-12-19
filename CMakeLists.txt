@@ -46,6 +46,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(APPLE)
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 	# Locate IOKit framework for serial/ioss.h
 	find_library(IOKit IOKit)
 	if(IOKit)
