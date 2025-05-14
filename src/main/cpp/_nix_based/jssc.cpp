@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <string.h>
@@ -657,9 +658,26 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
   (JNIEnv *env, jobject, jlong portHandle, jint byteCount){
 
     int err;
-    jbyte *lpBuffer = new jbyte[byteCount];
+    jbyte *lpBuffer = NULL;
     jbyteArray returnArray = NULL;
     int byteRemains = byteCount;
+
+    if( byteCount <= 0 ){
+        char emsg[64]; emsg[0] = '\0';
+        snprintf(emsg, sizeof emsg, "byteCount %d. Expected range: 1..2147483647", byteCount);
+        jclass exClz = env->FindClass("java/lang/IllegalArgumentException");
+        if( exClz ) env->ThrowNew(exClz, emsg);
+        returnArray = NULL; goto Finally;
+    }
+
+    lpBuffer = (jbyte*)malloc(byteCount*sizeof*lpBuffer);
+    if( !lpBuffer ){
+        char emsg[32]; emsg[0] = '\0';
+        snprintf(emsg, sizeof emsg, "malloc(%d) failed", byteCount*sizeof*lpBuffer);
+        jclass exClz = env->FindClass("java/lang/RuntimeException");
+        if( exClz ) env->ThrowNew(exClz, emsg);
+        returnArray = NULL; goto Finally;
+    }
 
     while(byteRemains > 0) {
         int result = 0;
@@ -707,7 +725,7 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
     assert(env->ExceptionCheck() == JNI_FALSE);
 
 Finally:
-    delete[] lpBuffer;
+    if( lpBuffer ) free(lpBuffer);
     return returnArray;
 }
 

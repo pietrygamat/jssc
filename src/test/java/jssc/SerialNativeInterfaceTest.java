@@ -4,6 +4,7 @@ import jssc.junit.rules.DisplayMethodNameRule;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -13,8 +14,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
+import static org.slf4j.LoggerFactory.getLogger;;
 
 public class SerialNativeInterfaceTest extends DisplayMethodNameRule {
+
+    private static final Logger log = getLogger(SerialNativeInterfaceTest.class);
 
     @Test
     public void testInitNativeInterface() {
@@ -92,6 +96,50 @@ public class SerialNativeInterfaceTest extends DisplayMethodNameRule {
     @Test(expected = java.lang.NullPointerException.class)
     public void throwsNpeIfPassedBufferIsNull() throws Exception {
         new SerialNativeInterface().writeBytes(1, null);
+    }
+
+    @Test
+    public void throwsIfCountNegative() throws Exception {
+        SerialNativeInterface testTarget = new SerialNativeInterface();
+        byte[] ret;
+        try{
+            ret = testTarget.readBytes(0, -42);
+            fail("Where's the exception?");
+        }catch( IllegalArgumentException ex ){
+            assertTrue(ex.getMessage().contains("-42"));
+        }
+    }
+
+    @Test
+    public void throwsIfCountZero() throws Exception {
+        SerialNativeInterface testTarget = new SerialNativeInterface();
+        byte[] ret;
+        try{
+            ret = testTarget.readBytes(0, 0);
+            fail("Where's the exception?");
+        }catch( IllegalArgumentException ex ){
+            assertTrue(ex.getMessage().contains("0"));
+        }
+    }
+
+    @Test
+    @org.junit.Ignore("This test only makes sense if it is run in a situation"
+        +" where large memory allocations WILL fail (for example you could use"
+        +" a virtual machine with low memory available). Because on regular"
+        +" machines allocating 2GiB of RAM is not a problem at all and so the"
+        +" test run will just happily wait infinitely for those 2GiB to arrive"
+        +" at the stdin fd. Feel free to remove this test if you think it"
+        +" doesn't make sense to have it here.")
+    public void throwsIfRequestTooLarge() throws Exception {
+        SerialNativeInterface testTarget = new SerialNativeInterface();
+        int tooLargeSize = Integer.MAX_VALUE;
+        try{
+            byte[] ret = testTarget.readBytes(0, tooLargeSize);
+            fail("Where's the exception?");
+        }catch( RuntimeException ex ){
+            log.debug("Thrown, as expected :)", ex);
+            assertTrue(ex.getMessage().contains(String.valueOf(tooLargeSize)));
+        }
     }
 
 }
