@@ -658,6 +658,7 @@
               </execution>
             </executions>
             <configuration>
+              <keyname>java-native</keyname>
               <gpgArguments>
                 <arg>--pinentry-mode</arg>
                 <arg>loopback</arg>
