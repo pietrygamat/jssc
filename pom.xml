@@ -658,8 +658,6 @@
               </execution>
             </executions>
             <configuration>
-              <keyname>java-native</keyname>
-              <passphraseServerId>gpg.passphrase</passphraseServerId>
               <gpgArguments>
                 <arg>--pinentry-mode</arg>
                 <arg>loopback</arg>
