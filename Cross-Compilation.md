@@ -1,4 +1,13 @@
 # Configuring a cross-compilation build environment
+## Github Action
+The native binaries for all architectures included in JSSC package are built publicly on Github using [this Action](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) and merged into git. This keeps them in sync with one another and with project version. The action is available to repository forks, so when contributing to the project you can always execute it on one of your branches, and after a few minutes it creates a branch (`<selected_branch_name>_precompiled_natives`) in your repository with all the binaries committed. 
+
+As a general contribution rule, the native binaries should _not_ be included in PRs, and instead built using Github and merged by the project maintainers.
+
+While keeping binaries in the source code may not be ideal, we feel it's a good compromise allowing project to be accessible to Java contributors without burdening them with the complexities of local C++ cross-compilation - and still having everything in one place.
+
+## Local environment configuration
+In order to compile the C++ code locally you can follow these instructions:
 
 This builds the library based on the G++ compiler and its supplemental packages.  
 This will allow you to build native binaries for
@@ -9,12 +18,7 @@ This will allow you to build native binaries for
 
 ## Prerequisites
 
-Starting point: A clean Ubuntu install with latest patches applied, one of:
-
-* Ubunutu 14.04  Trusty Tahr
-* Ubunutu 16.04  Xenial Xerus
-* Ubunutu 20.04  Focal Fossa
-
+Starting point: A clean Debian/Ubuntu install with latest patches applied.
 (other platforms will work, but the package names and commands may vary)
 
 ### Windows 32-bit
