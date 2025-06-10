@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -110,16 +111,25 @@ public class SerialNativeInterfaceTest extends DisplayMethodNameRule {
         }
     }
 
+    /**
+     * I think this case should just throw an exception, as trying to read zero
+     * bytes doesn't make much sense to me. But it seems we need to accept a
+     * "read of zero bytes" as a legal case. So jssc will respond with an empty
+     * array, exactly as caller did request.
+     * See also "https://github.com/java-native/jssc/issues/192".
+     * 
+     * Update: According to
+     * https://github.com/java-native/jssc/issues/192#issuecomment-2960137775
+     * there seems to exist some other issue related to events, which occasionly
+     * provocates zero-length reads. So as long this other issue exists, jssc
+     * probably should handle zero-length reads, as it seems to cause them
+     * itself. */
     @Test
-    public void throwsIfCountZero() throws Exception {
+    public void returnsAnEmptyArrayIfCountIsZero() throws Exception {
         SerialNativeInterface testTarget = new SerialNativeInterface();
-        byte[] ret;
-        try{
-            ret = testTarget.readBytes(0, 0);
-            fail("Where's the exception?");
-        }catch( IllegalArgumentException ex ){
-            assertTrue(ex.getMessage().contains("0"));
-        }
+        byte[] ret = testTarget.readBytes(0, 0);
+        assertNotNull(ret);
+        assertTrue(ret.length == 0);
     }
 
     @Test
