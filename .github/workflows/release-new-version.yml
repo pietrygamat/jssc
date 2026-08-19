@@ -67,7 +67,7 @@ jobs:
           name: ${{ needs.maven-central-release.outputs.releaseVersion }}
           tag: ${{ needs.maven-central-release.outputs.releaseTag }}
           allowUpdates: true
-          prerelease: true
+          draft: true
           artifacts: target/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
