@@ -7,7 +7,8 @@
  * C++
    * **Linux:** `g++`, `clang` or equivalent
    * **macOS:** XCode with Command Line Utilities
-      * `MacOSX10.9.sdk` is used for release builds due to [notarization requirements](https://github.com/java-native/jssc/issues/54).
+      * `MacOSX10.9.sdk` is used for x86_64 release builds due to [notarization requirements](https://github.com/java-native/jssc/issues/54).
+      * `MacOSX11.0.sdk` is used for arm64 release builds.
    * **Windows:** [Microsoft Visual C++](Windows-Build-Environment#visual-studio-components) (or [cross-compile using mingw-w64](Cross-Compilation#windows-32-bit))
  * Maven, CMake
    * **Linux:** `sudo apt install openjdk maven cmake g++ file`             
@@ -21,10 +22,14 @@
    mvn -P x86_64       # cross-compile for 64-bit x86/amd64 on current host OS(Linux/Unix, MacOS, Windows)  
    mvn -P ppc64        # cross-compile using multi-lib for PowerPC Linux/Unix
    mvn -P armhf        # cross-compile using multi-lib for arm 32 bit hard floating point Linux/Unix
+   mvn -P armsf        # cross-compile using multi-lib for arm 32 bit soft floating point Linux/Unix
+   mvn -P riscv64      # cross-compile for RISC-V 64-bit Linux
+   mvn -P riscv32      # cross-compile for RISC-V 32-bit Linux
    mvn -P aarch64      # cross-compile for arm64 based on current host OS (MacOS, Windows, Linux)
    mvn -P mingw64      # cross-compile for Windows x86_64
    mvn -P mingw32      # cross-compile for Windows x86
    mvn -P mingwaarch64 # cross-compile for Windows ARM64
+   mvn -P dockcross    # cross-compile inside a dockcross container
    ```
 * For cross-compile dependencies, see [[Cross-Compilation]]
 * **Important:** Call `mvn clean` between different compiler profiles.

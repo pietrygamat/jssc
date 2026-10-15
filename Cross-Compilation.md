@@ -1,6 +1,6 @@
 # Configuring a cross-compilation build environment
 ## Github Action
-The native binaries for all architectures included in JSSC package are built publicly on Github using [this Action](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) and merged into git. This keeps them in sync with one another and with project version. The action is available to repository forks, so when contributing to the project you can always execute it on one of your branches, and after a few minutes it creates a branch (`<selected_branch_name>_precompiled_natives`) in your repository with all the binaries committed. 
+The native binaries for all architectures included in JSSC package are built publicly on Github using [this Action](https://github.com/java-native/jssc/actions/workflows/cross-compile.yml) and merged into git. This keeps them in sync with one another and with project version. The action is available to repository forks, so when contributing to the project you can always execute it on one of your branches, and after a few minutes it creates a branch (`<selected_branch_name>-precompiled-natives`) in your repository with all the binaries committed. 
 
 As a general contribution rule, the native binaries should _not_ be included in PRs, and instead built using Github and merged by the project maintainers.
 
@@ -14,7 +14,7 @@ This will allow you to build native binaries for
 
 * **Windows:** `x86`, `x86_64` using mingw-w64
 * **Windows:** `arm64` (aarch64) using clang llvm-mingw wrapper
-* **Linux:** `arm`, `arm64` (aarch64) and `ppc64`
+* **Linux:** `arm`, `arm64` (aarch64), `ppc64` and `riscv64`
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ mvn -P mingw32
 ```bash
 sudo apt-get install mingw-w64
 ```
-2. Cross-compile using `mingw32` toolchain
+2. Cross-compile using `mingw64` toolchain
 ```bash
 mvn -P mingw64
 ```
@@ -62,6 +62,7 @@ sudo apt-get install g++-arm-linux-gnueabihf
 ```bash
 mvn -P armhf
 ```
+Note: release binaries for `linux_arm` are built for ARMv6 in the `dockcross/linux-armv6-lts` image.
 
 ### Linux ARM 64-bit
 1. Install dependencies
@@ -71,7 +72,7 @@ sudo apt-get install g++-aarch64-linux-gnu
 
 2. Cross-compile using `aarch64` toolchain
 ```bash
-mvn -P linux-aarch64
+mvn -P aarch64
 ```
 
 ### Linux PPC 64-bit
@@ -82,4 +83,14 @@ sudo apt-get install g++-powerpc64le-linux-gnu
 2. Cross-compile using `ppc64` toolchain
 ```bash
 mvn -P ppc64
+```
+
+### Linux RISC-V 64-bit
+1. Install dependencies
+```bash
+sudo apt-get install g++-riscv64-linux-gnu
+```
+2. Cross-compile using `riscv64` toolchain
+```bash
+mvn -P riscv64
 ```
