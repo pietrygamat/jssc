@@ -43,13 +43,13 @@
 
         <!-- Translate "NATIVE_LIB_DIR" prefix portion:
           - os.target.arch: must compare to a valid os value from os-maven-plugin
-          - os.target.nativelib.suffix: must be set to a valid directory os value from native-lib-loader plugin
+          - os.target.nativelib.suffix: must be set to a valid directory os value known to jssc.NativeLibraryLoader
         -->
         <property name="nativelibdir.prefix" value="${os.target.name}"/>
 
         <!-- Translate "NATIVE_LIB_DIR" suffix portion:
           - os.target.arch: must compare to a valid arch value from os-maven-plugin
-          - os.target.nativelib.suffix: must be set to a valid directory suffix value from native-lib-loader plugin
+          - os.target.nativelib.suffix: must be set to a valid directory suffix value known to jssc.NativeLibraryLoader
         -->
         <!-- "x86_64" <=> "64" -->
         <condition property="nativelibdir.suffix" value="64">
@@ -63,7 +63,21 @@
         <condition property="nativelibdir.suffix" value="arm64">
             <equals arg1="${os.target.arch}" arg2="aarch_64"/>
         </condition>
-        <!-- "arm_32" <=> "arm" -->
+        <!-- "arm_32" + os.target.abi "hf" <=> "armhf" (hard-float, see the armhf profile) -->
+        <condition property="nativelibdir.suffix" value="armhf">
+            <and>
+                <equals arg1="${os.target.arch}" arg2="arm_32"/>
+                <equals arg1="${os.target.abi}" arg2="hf"/>
+            </and>
+        </condition>
+        <!-- "arm_32" + os.target.abi "sf" <=> "armsf" (soft-float, see the armsf profile) -->
+        <condition property="nativelibdir.suffix" value="armsf">
+            <and>
+                <equals arg1="${os.target.arch}" arg2="arm_32"/>
+                <equals arg1="${os.target.abi}" arg2="sf"/>
+            </and>
+        </condition>
+        <!-- "arm_32" <=> "arm" (generic fallback, released as ARMv6 hard-float) -->
         <condition property="nativelibdir.suffix" value="arm">
             <equals arg1="${os.target.arch}" arg2="arm_32"/>
         </condition>

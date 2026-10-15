@@ -51,6 +51,9 @@
     <jar.dependencies.skip>true</jar.dependencies.skip>
     <update-resources-precompiled.skip>true</update-resources-precompiled.skip>
 
+    <!-- ARM 32-bit float ABI of the target: "hf", "sf" or empty (generic "linux_arm"). See ant/build.xml -->
+    <os.target.abi></os.target.abi>
+
     <!-- dependency versions a-z -->
     <dependency.junit.version>4.13.2</dependency.junit.version>
     <dependency.log4j.version>2.22.0</dependency.log4j.version>
@@ -626,8 +629,9 @@
         <os.target.toolchain>Armhf</os.target.toolchain>
 
         <os.target.name>linux</os.target.name>
-        <!-- TODO: namespace conflict with arm soft float library.  See also cmake's HAS_FPU -->
         <os.target.arch>arm_32</os.target.arch>
+        <!-- natives/linux_armhf -->
+        <os.target.abi>hf</os.target.abi>
         <os.target.bitness>32</os.target.bitness>
       </properties>
     </profile>
@@ -639,8 +643,9 @@
         <os.target.toolchain>Armsf</os.target.toolchain>
 
         <os.target.name>linux</os.target.name>
-        <!-- TODO: namespace conflict with arm hard float library.  See also cmake's HAS_FPU -->
         <os.target.arch>arm_32</os.target.arch>
+        <!-- natives/linux_armsf -->
+        <os.target.abi>sf</os.target.abi>
         <os.target.bitness>32</os.target.bitness>
       </properties>
     </profile>

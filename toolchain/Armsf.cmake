@@ -1,5 +1,10 @@
 set(CMAKE_SYSTEM_NAME Linux)
 set(TOOLCHAIN_PREFIX arm-linux-gnueabi)
+# Prefer the unversioned compiler (e.g. Ubuntu's g++-arm-linux-gnueabi), fall back to the legacy gcc-5 name
+find_program(JSSC_ARMSF_UNVERSIONED_CXX ${TOOLCHAIN_PREFIX}-g++)
+if(JSSC_ARMSF_UNVERSIONED_CXX)
+	set(SKIP_COMPILER_VERSION ON)
+endif()
 if(NOT SKIP_COMPILER_VERSION)
 	SET(COMPILER_VERSION 5)
 	if(NOT COMPILER_VERSION MATCHES "-.*")

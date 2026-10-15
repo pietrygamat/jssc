@@ -55,6 +55,23 @@ jobs:
             os_target_bitness: 32
             image: docker.io/dockcross/linux-armv6-lts:${DOCK_CROSS_TAG}
 
+          # ARMv7 hard-float, preferred over linux_arm by the loader on hard-float JVMs (#35, #197).
+          # Note: linux-armv7 is hard-float, but linux-armv7-lts is softfp (soft-float ABI); CMake rejects a mismatch.
+          - target: linux_armhf
+            os_target_name: linux
+            os_target_arch: arm_32
+            os_target_abi: hf
+            os_target_bitness: 32
+            image: docker.io/dockcross/linux-armv7:${DOCK_CROSS_TAG}
+
+          # ARMv5 soft-float (armel), preferred by the loader on soft-float JVMs (#35)
+          - target: linux_armsf
+            os_target_name: linux
+            os_target_arch: arm_32
+            os_target_abi: sf
+            os_target_bitness: 32
+            image: docker.io/dockcross/linux-armv5:${DOCK_CROSS_TAG}
+
           - target: linux_arm64
             os_target_name: linux
             os_target_arch: aarch_64
@@ -123,6 +140,7 @@ jobs:
                    mvn -B clean install -P dockcross,update-resources-precompiled \
                     -Dos.target.name=${{ matrix.os_target_name }} \
                     -Dos.target.arch=${{ matrix.os_target_arch }} \
+                    -Dos.target.abi=${{ matrix.os_target_abi }} \
                     -Dos.target.bitness=${{ matrix.os_target_bitness }} \
                   '
 

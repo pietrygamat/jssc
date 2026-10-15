@@ -21,6 +21,9 @@ jobs:
           - profile: armhf
             packages: g++-arm-linux-gnueabihf
 
+          - profile: armsf
+            packages: g++-arm-linux-gnueabi
+
           - profile: aarch64
             packages: g++-aarch64-linux-gnu
 
