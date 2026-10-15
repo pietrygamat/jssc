@@ -452,6 +452,17 @@
       </properties>
     </profile>
 
+    <!-- Same as above for JDKs 20+, which dropped target version 7 -->
+    <profile>
+      <id>jdk20+</id>
+      <activation>
+        <jdk>[20,)</jdk>
+      </activation>
+      <properties>
+        <target.java.version>8</target.java.version>
+      </properties>
+    </profile>
+
     <!-- Copy newly built native libraries back to source tree -->
     <profile>
       <id>update-resources-precompiled</id>
