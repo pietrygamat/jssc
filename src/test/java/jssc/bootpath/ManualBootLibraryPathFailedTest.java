@@ -15,7 +15,7 @@ import static org.junit.Assert.fail;
  * TODO: This MUST be in its own class to run in a separate JVM (https://stackoverflow.com/questions/68657855)
  * - JUnit does NOT currently offer JVM unloading between methods.
  * - maven-surefire-plugin DOES offer JVM unloading between classes using <code>reuseForks=false</code>
- * - Unloading is needed due to NativeLoader.loadLibrary(...) calls System.loadLibrary(...) which is static
+ * - Unloading is needed due to the loader calling System.load(...) which is static
  */
 public class ManualBootLibraryPathFailedTest extends DisplayMethodNameRule {
     @Test

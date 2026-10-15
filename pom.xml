@@ -55,7 +55,6 @@
     <dependency.junit.version>4.13.2</dependency.junit.version>
     <dependency.log4j.version>2.22.0</dependency.log4j.version>
     <dependency.logback.version>1.2.3</dependency.logback.version>
-    <dependency.nativelibloader.version>2.5.0</dependency.nativelibloader.version>
 
     <!-- plugin versions a-z -->
     <plugin.animalsniffer.version>1.24</plugin.animalsniffer.version>
@@ -77,11 +76,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.scijava</groupId>
-      <artifactId>native-lib-loader</artifactId>
-      <version>${dependency.nativelibloader.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
