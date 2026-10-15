@@ -100,26 +100,28 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
   - Then close #63 and #123.
 - Vzor- and tresf wanted tests or a manual QA checklist for unplug scenarios (#107).
 
-### B-10 Replace or remove `native-lib-loader` (needs-decision)
+### B-10 Replace or remove `native-lib-loader` (implemented on branch `b10-native-loader`, needs maintainer review)
 - **Refs:** #165 (open: empty temp dir always created), #21, #23, #64, #76, #164, #167 (slf4j warnings), #80, #75, #112 (upstream dependence), #24, #35 (no hf/sf distinction).
 - **Context:** tresf (2025): "in hindsight… better off updating its old extraction code… would be receptive" to removing it.
-- **Benefits:** no slf4j transitive dependency or warning, no temp-dir side effect, control over ARM hf/sf selection (#35), fewer upstream blockers.
-- **Constraints:**
-  - Keep the `jssc.boot.library.path` semantics (#92).
-  - Keep the `natives/<os>_<suffix>/` layout.
-  - Keep the system-library-path-first lookup order.
-  - Keep the module descriptor valid (`requires transitive org.scijava.nativelib` must change).
-  - Keep the fat jar working.
-  - Java 6.
-  - This is a dependency/API surface change, so it needs a minor bump.
-- **First step:** a design note on the issue/Discord for maintainer sign-off.
+- **Done (2.11.0-SNAPSHOT, fork branch `b10-native-loader`):**
+  - Package-private `jssc.NativeLibraryLoader` replaces native-lib-loader; `org.scijava:native-lib-loader` and the transitive `slf4j-api` are gone from the pom, `requires transitive org.scijava.nativelib` is gone from `module-info`.
+  - Same lookup order: `java.library.path` → `jssc.boot.library.path` (same semantics, #92) → extraction from `natives/<os>_<suffix>/`.
+  - No temp directory unless extraction actually happens (#165). Extraction goes to a per-version, per-user, owner-only cache (`<tmpdir>/jssc-<version>-<user>/<platform>/`), content-verified and written via temp file + rename; private per-process fallback directory for root, foreign-owned cache dirs and "already loaded in another classloader".
+  - `DefaultJniExtractorStub` (public, but only usable with native-lib-loader) is removed; documented in the README migration notes.
+  - `linux_ppc` is now selected for ppc64le JVMs (native-lib-loader never mapped it).
+  - ARM hf/sf detection, see B-11.
+- **Still to do:** maintainer sign-off (design note on #165/Discord), a cross-compile run to produce `linux_armhf`/`linux_armsf`, and release notes. Then close #165, #167, #35 (partially).
 
-### B-11 ARM 32-bit compatibility: ARMv6 vs ARMv7, hard-float vs soft-float (open)
+### B-11 ARM 32-bit compatibility: ARMv6 vs ARMv7, hard-float vs soft-float (partial)
 - **Refs:** #197 (open: ARMv7 Ubuntu 16.04 / Java 8 fails to load since 2.9.5), #35 (open: hf/sf distinction), #139 (ARMv6 fix), #26, #48, pom TODOs at the `armhf`/`armsf` profiles.
 - **Do:**
   - Reproduce #197. Candidates are a glibc symbol version from the `linux-armv6-lts` image, or a float ABI/loader mismatch. Use `readelf -V`/`readelf -A` on `natives/linux_arm/libjssc.so` from 2.9.4 and 2.10.4.
   - Aim for one `linux_arm` binary that loads on ARMv6 (Pi 1/Zero) **and** ARMv7 hard-float.
-  - If soft-float is ever needed, that requires B-10 or an upstream loader change.
+- **Done on `b10-native-loader` (with B-10):**
+  - The loader reads the JVM's float ABI on 32-bit ARM Linux (`/proc/self/exe` ELF `e_flags` `EF_ARM_ABI_FLOAT_HARD/SOFT`, then the `PT_INTERP` name, then `sun.arch.abi`, then `/lib/ld-linux-armhf.so.3` vs `/lib/ld-linux.so.3`). It prefers `natives/linux_armhf` or `natives/linux_armsf` when bundled and falls back to `natives/linux_arm`.
+  - `-Parmhf` builds into `natives/linux_armhf`, `-Parmsf` into `natives/linux_armsf` (`os.target.abi` → ant suffix). The default `arm_32` still builds `linux_arm`. CMake checks the compiler's float ABI (`__ARM_PCS_VFP`) and fails on a mismatch.
+  - `cross-compile.yml` builds `linux_armhf` with dockcross `linux-armv7` (hard-float; **`linux-armv7-lts` is softfp, i.e. soft-float ABI**) and `linux_armsf` with `linux-armv5`. Not yet run in CI, so no binaries are committed.
+- **Finding for #197:** the released `linux_arm/libjssc.so` (2.10.4) imports `fcntl@GLIBC_2.28`, so it needs glibc ≥ 2.28; Ubuntu 16.04 has 2.23. That alone explains "Could not load the jssc library" there. Local dockcross builds (`DOCK_CROSS_TAG` 20231208) of `linux_armhf` (`linux-armv7`) also need 2.28 and `linux_armsf` (`linux-armv5`) needs 2.32. Fixing it needs an older toolchain/sysroot or a `.symver` pin for `fcntl` (see B-12).
 - **Hardware:** none of the maintainers routinely test on ARM32. Ask the reporters.
 
 ### B-12 Linux glibc floor without pinning dockcross forever (open)
@@ -127,6 +129,8 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 - **Context:** pinning keeps glibc 2.3 for x86/x64 but freezes the toolchains. tresf: pinning the Windows images isn't needed.
 - **Options:** `dockcross/manylinux2014-x86`/`manylinux_2_28-x64` images; or ask dockcross for `-lts`-style legacy images; or unpin Windows only.
 - **Done when:** the glibc floor stays ≤ 2.17 (ideally the current 2.3–2.4) on every Linux arch and is verified by B-02.
+- **Measured (2026-10-16, 2.10.4 natives):** `linux_64` needs `GLIBC_2.14` (`memcpy`), `linux_arm` needs `GLIBC_2.28` (`fcntl`), see B-11.
+- **Risk (seen locally 2026-10-16):** in the pinned dockcross images (Debian bullseye) `apt-get install maven openjdk-17-jdk-headless` failed with 404s for package files that the `bullseye-security` index still lists (bullseye LTS ended 2026-08). If CI sees the same, the `cross-compile.yml` Linux/Windows jobs fail at that step. Options: take the JDK/Maven from the runner (mount the `actions/setup-java` JDK into the container) or point apt to `archive.debian.org`.
 
 ### B-13 InputStream/OutputStream adapter (open)
 - **Refs:** #183 (open), #127 (draft PR with `SerialPortStream`), #160 (exceptions now `IOException`).
@@ -170,12 +174,12 @@ The wiki is a separate git repo, `https://github.com/java-native/jssc.wiki.git`.
 
 ### B-19 Repo docs cleanup (open)
 - README: remove the stale Travis-CI badge; optionally add a GitHub Actions badge.
-- `src/main/resources-precompiled/README.md`: rewrite it to describe the layout in use (`linux_32/64/arm/arm64/ppc/riscv32/riscv64`, `osx_64/arm64`, `windows_32/64/arm64`), and remove the unused "next version" naming and the `mac_*` paths.
+- `src/main/resources-precompiled/README.md`: rewrite it to describe the layout in use (`linux_32/64/arm/armhf/armsf/arm64/ppc/riscv32/riscv64`, `osx_64/arm64`, `windows_32/64/arm64`), and remove the unused "next version" naming, the `mac_*` paths and the native-lib-loader references (left untouched on `b10-native-loader`, which doesn't modify `resources-precompiled`).
 - Release-notes template: include migration notes when exception or API behaviour changes (#160 lesson).
 
 ### B-20 pom/CMake tidy-ups (open)
 - Remove the unused `dependency.logback.version` property (logback was replaced in #159).
-- Remove or replace stale TODOs once the related items are resolved: `armhf`/`armsf` namespace TODO (B-11); CMake `# TODO: Handle arm, hardfloat`; `-Werror`/`/WX` TODOs (#15 history: warnings-as-errors was dropped; be careful, see the #113 lesson).
+- Remove or replace stale TODOs once the related items are resolved: ~~`armhf`/`armsf` namespace TODO (B-11); CMake `# TODO: Handle arm, hardfloat`~~ (done on `b10-native-loader`); `-Werror`/`/WX` TODOs (#15 history: warnings-as-errors was dropped; be careful, see the #113 lesson).
 - `SerialNativeInterface`: "TODO: This class is effectively static, why instantiate it?" Not easily fixable because some JNI functions are instance methods (#105). Only revisit with a native-signature-changing release.
 - `MH_DYLIB_STUB` deprecation warnings from SDK 10.9 (#178): ignored for now; revisit with B-03.
 
@@ -215,8 +219,8 @@ These look resolvable. Propose closing them, with a comment, to the maintainers:
 | `defaultGoal clean install` | Rejected: forces a full rebuild for casual users | #28 |
 | git-lfs for natives | Rejected (git-lfs#1906) | #14 |
 | Split into `jssc-native` / `libloader` / parent repos | Rejected: one repo keeps things debuggable | #40, #23 |
-| Shaded fat jar | Rejected: breaks slf4j binding; unshaded `jar-with-dependencies` instead | #21, #43 |
-| slf4j as `provided` | Rejected: the fat jar must run standalone | #64 |
+| Shaded fat jar | Rejected: breaks slf4j binding; unshaded `jar-with-dependencies` instead (moot once B-10 lands: no runtime dependencies left) | #21, #43 |
+| slf4j as `provided` | Rejected: the fat jar must run standalone (moot once B-10 lands) | #64 |
 | Fail the build on JDK 12+ | Rejected: auto-target Java 7 with a warning instead | #81 |
 | Natives in contributor PRs | Not accepted: CI-built only | wiki Cross-Compilation, #102 |
 | JetBrains `@MagicConstant` annotations | Rejected | #169 |

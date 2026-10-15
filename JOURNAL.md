@@ -123,7 +123,7 @@ Conventions: `#N` = upstream issue/PR number. People are referred to by GitHub h
 ### Platforms
 - **Apple Silicon (#74)** and **Windows ARM64 (#75)** shipped in 2.9.3 and 2.9.4.
 - **aarch64 profiles (#91):** `mvn -P aarch64|x86_64|x86`. Profile logic later moved to Ant (#93, #98), because os-maven-plugin properties aren't available when profiles are activated (trustin/os-maven-plugin#23). Properties pass from Ant back to Maven through a properties-file workaround (MANTRUN-231).
-- **Sandboxed environments (#92):** `jssc.boot.library.path` plus `DefaultJniExtractorStub` let JSSC load a native from a fixed directory without extracting it. This covers SELinux and the Mac App Store. Documented in the wiki "Examples" page.
+- **Sandboxed environments (#92):** `jssc.boot.library.path` plus `DefaultJniExtractorStub` let JSSC load a native from a fixed directory without extracting it. This covers SELinux and the Mac App Store. Documented in the wiki "Examples" page. (Since the B-10 loader, the same property is handled by `NativeLibraryLoader`; the stub is gone.)
 - **Port detection (#97, supersedes #64):** on macOS JSSC lists `tty.*`/`cu.*`. The open-to-probe check stays only for Linux `ttyS*`, because probing hurt USB-CDC devices on macOS.
 
 ### Unix I/O rework (#53, #78, #90, #94–#96, #103)
@@ -340,3 +340,16 @@ GitHub wikis don't accept pull requests, so the proposal was opened on the fork 
   - Adds the `armsf`, `riscv64`, `riscv32` and `dockcross` profiles.
   - Adds the macOS arm64 SDK (11.0).
 - **Not changed (kept the PR small):** Examples, Windows-Build-Environment, README badge, `resources-precompiled/README.md`, pom cleanup. These stay tracked in BACKLOG.md (B-18, B-19, B-20).
+
+### Own native loader replaces native-lib-loader (2026-10-16, fork branch `b10-native-loader`, not upstream yet)
+Implements B-10 and the loader half of B-11 (#35, #165, #167). Decisions:
+- **In-house, package-private `jssc.NativeLibraryLoader`** rather than a fork or another library: no runtime dependencies at all, so the slf4j warnings (#76, #164, #167) and the `NoClassDefFoundError` class of problems (#21, #43) disappear. The fat jar now equals the plain jar.
+- **Lookup order and `jssc.boot.library.path` semantics are unchanged** (#92): an existing boot directory is final (no fallback, `ManualBootLibraryPathFailedTest`); a missing one prints the same warning and falls back to extraction. New: the boot path also works on platforms without a bundled library (native-lib-loader gave up on an unknown architecture before looking at it).
+- **No temp directory unless extracting** (#165).
+- **Extraction target:** a shared per-version, per-user cache (`<java.io.tmpdir>/jssc-<version>-<user>/<platform>/<lib>`) instead of a new random directory per JVM. Reasons: Windows can't delete a loaded DLL, so per-process directories piled up (native-lib-loader cleaned them up on the next start). Safety measures: the directory is created owner-only (0700) under a random name and renamed into place; a pre-existing directory must be owned by the current user (checked with a no-op `chmod` via `File.setWritable(true, true)`, which only the owner can do; Java 6 has no owner API); the file is reused only if its bytes equal the bundled library, otherwise written to a temp file and renamed (atomic for concurrent JVMs). root, a foreign or unusable cache directory, and "already loaded in another classloader" fall back to a private per-process directory marked `deleteOnExit`. The shared cache itself isn't deleted on exit, because another JVM may be about to load it.
+- **Platform mapping** copies native-lib-loader's `os.name`/`os.arch` rules for every bundled directory. Deliberate differences: `ppc64le` → `linux_ppc` (native-lib-loader had no Linux PPC mapping, so the shipped `linux_ppc` binary was never used), `aarch64`/`arm64` is checked before `arm`, and `Darwin` maps to `osx` instead of falling into the `win` match. Only the `natives/` resource root is searched (native-lib-loader also tried the jar root and `META-INF/lib`, which JSSC never used).
+- **ARM float ABI (#35):** read from the running JVM's ELF header (`/proc/self/exe`): `e_flags` for EABI5 binaries, then the `PT_INTERP` loader name, then `sun.arch.abi`, then which ARM dynamic loader exists. `linux_armhf`/`linux_armsf` are preferred when present; `linux_arm` remains the generic fallback, so old jars and layouts keep working. JSSC 2.8.0 did something similar with `readelf` (#26).
+- **Build:** `-Parmhf` → `natives/linux_armhf`, `-Parmsf` → `natives/linux_armsf` (new `os.target.abi` property). CMake now checks the compiler's float ABI instead of the host FPU (`HAS_FPU`). In dockcross, `linux-armv7` is hard-float while `linux-armv7-lts` is softfp, so `linux-armv7` builds `linux_armhf`; `linux-armv5` builds `linux_armsf`.
+- **Removed public class `DefaultJniExtractorStub`:** it extended `org.scijava.nativelib.DefaultJniExtractor`, so it can't survive without the dependency. Version bumped to **2.11.0** with migration notes in the README.
+- **#197 finding:** released `linux_arm` needs glibc 2.28 (`fcntl@GLIBC_2.28`). See BACKLOG B-11/B-12.
+
