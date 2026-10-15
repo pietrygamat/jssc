@@ -30,7 +30,13 @@ jobs:
           gpg-private-key: ${{ secrets.JAVA_NATIVE_PGP_KEY }}
       - name: Set release version if provided as input
         if: github.event.inputs.releaseVersion != ''
-        run: echo "VERSIONS=-DreleaseVersion=${{ github.event.inputs.releaseVersion }}" >> $GITHUB_ENV
+        run: echo "VERSIONS=-DreleaseVersion=${{ github.event.inputs.releaseVersion }} -Djssc.release.version=${{ github.event.inputs.releaseVersion }}" >> $GITHUB_ENV
+      # The release itself skips tests (-P package), so verify the precompiled natives up front
+      - name: Verify precompiled natives
+        run: >
+          mvn -B test -Djssc.natives.strict=true ${VERSIONS}
+          -Dcmake.generate.skip=true -Dcmake.build.skip=true -Djavah.skip=true
+          -Dtest='jssc.natives.*Test' -Dsurefire.failIfNoSpecifiedTests=false
       - name: Publish artifacts to Maven Central
         run: mvn -B release:prepare release:perform -P package,maven-central-release ${VERSIONS}
         env:
