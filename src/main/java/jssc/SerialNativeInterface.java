@@ -38,6 +38,7 @@ public class SerialNativeInterface {
 
     private static final String libVersion = "2.10.4";
     private static final String libName = "jssc";
+    private static final String bootLibraryPathProperty = "jssc.boot.library.path";
 
     /** Linux **/
     public static final int OS_LINUX = 0;
@@ -122,7 +123,7 @@ public class SerialNativeInterface {
     /**
      * JSSC includes a small, platform-specific shared library and uses native-lib-loader for extraction.
      * - First, it attempts to load this library from the system library path.
-     * - Next, it will fallback to <code>jssc.boot.library.path</code>
+     * - Next, it will fallback to <code>jssc.boot.library.path</code> (see {@link #getBootLibraryPath()})
      * - Finally it will attempt to extract the library from the jssc.jar file, and load it.
      *
      * native-lib-loader only locates or extracts the file; the library is loaded from this class.
@@ -137,7 +138,7 @@ public class SerialNativeInterface {
         } catch (UnsatisfiedLinkError notOnLibraryPath) {
             // fall back to jssc.boot.library.path or extraction
         }
-        String bootPath = System.getProperty("jssc.boot.library.path");
+        String bootPath = getBootLibraryPath();
         try {
             File lib = locateLibrary(new DefaultJniExtractorStub(SerialNativeInterface.class, bootPath));
             try {
@@ -156,6 +157,36 @@ public class SerialNativeInterface {
             throw linkError(ioException);
         } catch (UnsatisfiedLinkError linkError) {
             throw linkError(linkError);
+        }
+    }
+
+    /**
+     * <code>jssc.boot.library.path</code> from the system properties or, when jssc runs as a started
+     * OSGi bundle, from the framework properties. Reflection keeps OSGi an optional dependency.
+     */
+    private static String getBootLibraryPath() {
+        String bootPath = System.getProperty(bootLibraryPathProperty);
+        if (bootPath != null) {
+            return bootPath;
+        }
+        try {
+            ClassLoader loader = SerialNativeInterface.class.getClassLoader();
+            Object bundle = Class.forName("org.osgi.framework.FrameworkUtil", true, loader)
+                    .getMethod("getBundle", Class.class).invoke(null, SerialNativeInterface.class);
+            if (bundle == null) {
+                return null; // OSGi API present, but jssc is not a bundle
+            }
+            Object context = Class.forName("org.osgi.framework.Bundle", true, loader)
+                    .getMethod("getBundleContext").invoke(bundle);
+            if (context == null) {
+                return null; // bundle not started
+            }
+            return (String) Class.forName("org.osgi.framework.BundleContext", true, loader)
+                    .getMethod("getProperty", String.class).invoke(context, bootLibraryPathProperty);
+        } catch (Exception notOsgi) {
+            return null;
+        } catch (LinkageError notOsgi) {
+            return null;
         }
     }
 

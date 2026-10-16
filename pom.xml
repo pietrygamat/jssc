@@ -325,6 +325,8 @@
         <configuration>
           <instructions>
             <Export-Package>jssc</Export-Package>
+            <!-- used by reflection only, to read jssc.boot.library.path from the framework properties -->
+            <Import-Package>org.osgi.framework;version="[1.5,2)";resolution:=optional,*</Import-Package>
             <_removeheaders>Bnd-LastModified,Tool,Include-Resource,Private-Package</_removeheaders>
           </instructions>
         </configuration>
