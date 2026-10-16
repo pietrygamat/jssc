@@ -54,6 +54,10 @@ runs:
         sdk="${{ inputs.sdk-version }}"; sdk="${sdk#MacOSX}"; sdk="${sdk%.sdk}"
         (cd "$src" && UNATTENDED=1 SDK_VERSION="$sdk" TARGET_DIR="${{ steps.paths.outputs.target-dir }}" ./build.sh)
 
-    - name: Show toolchain
+    # The clang wrappers find ld64 (<triple>-ld) only through PATH; without it clang falls back to
+    # the system GNU ld ("unrecognised emulation mode: llvm")
+    - name: Add osxcross to PATH
       shell: bash
-      run: ls "${{ steps.paths.outputs.target-dir }}/bin" | grep -E 'clang\+\+$'
+      run: |
+        echo "${{ steps.paths.outputs.target-dir }}/bin" >> "$GITHUB_PATH"
+        ls "${{ steps.paths.outputs.target-dir }}/bin" | grep -E 'clang\+\+$|-ld$'
