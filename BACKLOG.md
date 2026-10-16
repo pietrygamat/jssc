@@ -51,7 +51,7 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 - **Done when:** CI no longer depends on a deprecated runner and the release dylibs are verified as above.
 - **Directions (2026-10-16, one draft PR each, both stacked on the environment hardening below):**
   - *A, runners:* `macos-15` (arm64) + `macos-15-intel` with the Xcode SDK and `MACOSX_DEPLOYMENT_TARGET` (tresf's proposal). Small change, but `macos-15-intel` is the last Intel image, so x86_64 later has to move to a cross build on arm64.
-  - *B, no Mac:* osxcross on the Ubuntu runner with the phracker 11.0 SDK for both architectures (attached "macOS without a Mac" roadmap); x86_64 keeps deployment target 10.9. The 10.9 SDK has no libc++ headers (on a Mac, Xcode supplies them), so osxcross cannot use it (CI: "osxcross: error: cannot find libc++ headers"). Still an old, fixed SDK, so the binaries stay closer to 2.10.4 than with direction A; adds a toolchain to maintain. A macOS runner is then only needed for tests.
+  - *B, no Mac:* osxcross on the Ubuntu runner with the phracker 11.3 SDK for both architectures (attached "macOS without a Mac" roadmap); x86_64 keeps deployment target 10.9, arm64 11.0. The 10.9 and 11.0 SDKs have no libc++ headers (on a Mac, Xcode supplies them), so osxcross cannot use them (CI: "osxcross: error: cannot find libc++ headers"); 11.3 is the first that ships them in `usr/include/c++/v1` and still lists 10.9 as a deployment target. Still an old, fixed SDK, so the binaries stay closer to 2.10.4 than with direction A; adds a toolchain to maintain. A macOS runner is then only needed for tests.
 - **Stale build environment (the other risks found while planning B-03):**
 
   | Risk | Evidence | Status |

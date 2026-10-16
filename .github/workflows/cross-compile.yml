@@ -141,8 +141,8 @@ jobs:
           git commit --allow-empty -m "Precompiled natives (@${{ needs.create-branch.outputs.base_rev }}) for ${{ matrix.target }}"
           while  git pull --rebase && ! git push; do sleep 5; done
 
-  # macOS natives are cross-compiled on Linux with osxcross against the same 10.9 / 11.0 SDKs the
-  # macOS runners used (B-03 direction B), so no Mac is involved in producing release binaries.
+  # macOS natives are cross-compiled on Linux with osxcross against the fixed 11.3 SDK, with
+  # deployment targets 10.9 / 11.0 (B-03 direction B), so no Mac is involved in producing release binaries.
   macos:
     runs-on: ubuntu-24.04
     needs: create-branch
@@ -152,13 +152,13 @@ jobs:
           - target: osx_64
             os-target-arch: x86_64
             osxcross-arch: x86_64
-            sdk-version: MacOSX11.0.sdk
+            sdk-version: MacOSX11.3.sdk
             macos-deployment-target: '10.9'
 
           - target: osx_arm64
             os-target-arch: aarch_64
             osxcross-arch: arm64
-            sdk-version: MacOSX11.0.sdk
+            sdk-version: MacOSX11.3.sdk
             macos-deployment-target: '11.0'
 
     steps:
