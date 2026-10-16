@@ -91,11 +91,13 @@ jobs:
 
       - run: brew install socat
 
-      # Ask the active Xcode for its SDK directory instead of relying on an image-specific
-      # variable such as XCODE_16_DEVELOPER_DIR, which disappears when the image drops that Xcode
+      # Keep the old SDK outside every Xcode instead of relying on an image-specific variable such
+      # as XCODE_16_DEVELOPER_DIR. Not in the active Xcode either: with SDKROOT pointing into it,
+      # the /usr/bin/make shim asks xcodebuild for that SDK's tools and fails
       - name: Get oldest supported SDK
         run: |
-          SDKS_DIR="$(xcrun --show-sdk-platform-path)/Developer/SDKs"
+          SDKS_DIR="${RUNNER_TEMP}/MacOSX-SDKs"
+          mkdir -p "$SDKS_DIR"
           wget -qO- https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/${{ matrix.sdk-version }}.tar.xz \
             | tar -xjv -C "$SDKS_DIR"
           echo "SDKS_DIR=$SDKS_DIR" >> $GITHUB_ENV

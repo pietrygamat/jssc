@@ -171,7 +171,8 @@ jobs:
 
       - name: Get oldest supported SDK
         run: |
-          SDKS_DIR="$(xcrun --show-sdk-platform-path)/Developer/SDKs"
+          SDKS_DIR="${RUNNER_TEMP}/MacOSX-SDKs"
+          mkdir -p "$SDKS_DIR"
           wget -qO- https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/${{ matrix.sdk-version }}.tar.xz \
             | tar -xjv -C "$SDKS_DIR"
           echo "SDKS_DIR=$SDKS_DIR" >> $GITHUB_ENV
