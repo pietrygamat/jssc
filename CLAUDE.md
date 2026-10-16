@@ -25,7 +25,7 @@ Notes:
 - **Tests only run when the target platform matches the host.** `ant/build.xml` (`test-props`) sets `maven.test.skip=true` for cross-compile profiles and prints "Tests WILL/will NOT run".
 - `VirtualPortTest` needs `socat` to create virtual serial port pairs. It is skipped on Windows or when `socat` is missing.
 - `ManualBootLibraryPathTest` is excluded when the native build is skipped (`maven.exclude.tests`). Surefire uses `reuseForks=false` so that each test class gets a fresh JVM. The `jssc.boot.library.path` tests depend on this.
-- CI (`.github/workflows/build.yml`) builds with JDK 11. Runner images are pinned (`ubuntu-24.04`, `windows-2025`, `macos-14`); `env-canary.yml` runs the same matrix weekly on the next images and checks that the pinned dockcross images still exist. Bump a pin when the canary is green on its successor.
+- CI (`.github/workflows/build.yml`) builds with JDK 11. Runner images are pinned (`ubuntu-24.04`, `windows-2025`, `macos-15`, `macos-15-intel`); `env-canary.yml` runs the same matrix weekly on the next images and checks that the pinned dockcross images still exist. Bump a pin when the canary is green on its successor.
 
 ## Java version constraints
 
@@ -54,7 +54,7 @@ Notes:
 - **Do not commit locally built natives in PRs.** Only the workflow output is accepted (wiki "Cross-Compilation").
 - Binary compatibility is a project goal: target the oldest systems you can.
   - Linux natives come from dockcross images pinned by `DOCK_CROSS_TAG` (Debian bullseye; don't apt-install anything inside them, the workflow mounts the runner's JDK and Maven), which keeps glibc at 2.3 for x86/x64 (#190/#191). `linux_arm` is built for ARMv6 (`linux-armv6-lts`, #139), so a local `-P armhf` build is not equivalent.
-  - macOS x86_64 uses `MacOSX10.9.sdk` with deployment target 10.9. That is the minimum Apple notarization accepts (#54, #187). arm64 uses SDK and target 11.0.
+  - macOS x86_64 uses `MacOSX10.9.sdk` with deployment target 10.9. That is the minimum Apple notarization accepts (#54, #187). arm64 uses SDK and target 11.0. Release dylibs are cross-compiled on Linux with osxcross (`-Posxcross`, `toolchain/Osxcross.cmake`, `.github/actions/setup-osxcross`); the SDK tarballs come from phracker/MacOSX-SDKs and must stay in the private Actions cache, never in a published image (Apple license). macOS runners only run the tests.
   - The `show-file-info` Ant target prints `file` and `otool` minos output, so you can check this.
 - Users can bypass extraction with `-Djssc.boot.library.path=<dir>` (#92). This is required in sandboxed environments.
 

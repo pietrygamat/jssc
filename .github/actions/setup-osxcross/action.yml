@@ -1,0 +1,59 @@
+name: Set up osxcross
+description: >
+  Builds (or restores from the Actions cache) an osxcross toolchain for one macOS SDK, so macOS
+  natives can be cross-compiled on Linux (B-03, direction B). The Apple SDK is the same
+  phracker/MacOSX-SDKs tarball the macOS runners used, and it only ever lives in this runner and
+  in the repository's private Actions cache: Apple's license does not allow redistributing it, so
+  never bake it into a published image.
+
+inputs:
+  sdk-version:
+    description: 'SDK directory name, e.g. MacOSX10.9.sdk'
+    required: true
+  osxcross-ref:
+    description: 'osxcross git ref; pin to a commit SHA once a build has been verified'
+    required: false
+    default: 'master'
+
+outputs:
+  target-dir:
+    description: 'osxcross target directory (bin/, SDK/)'
+    value: ${{ steps.paths.outputs.target-dir }}
+
+runs:
+  using: composite
+  steps:
+    - id: paths
+      shell: bash
+      run: |
+        sha=$(git ls-remote https://github.com/tpoechtrager/osxcross.git "${{ inputs.osxcross-ref }}" | cut -f1 | head -1)
+        sha=${sha:-${{ inputs.osxcross-ref }}}
+        echo "osxcross ${{ inputs.osxcross-ref }} = ${sha}"
+        echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+        echo "target-dir=${RUNNER_TEMP}/osxcross-${{ inputs.sdk-version }}" >> "$GITHUB_OUTPUT"
+
+    - id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.paths.outputs.target-dir }}
+        key: osxcross-${{ steps.paths.outputs.sha }}-${{ inputs.sdk-version }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/actions/setup-osxcross/action.yml') }}
+
+    - name: Build osxcross
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes clang cmake git patch python3 libssl-dev liblzma-dev libxml2-dev \
+          libbz2-dev zlib1g-dev xz-utils bzip2 cpio
+        src="${RUNNER_TEMP}/osxcross-src"
+        git clone --quiet https://github.com/tpoechtrager/osxcross.git "$src"
+        git -C "$src" checkout --quiet "${{ steps.paths.outputs.sha }}"
+        wget -q -O "$src/tarballs/${{ inputs.sdk-version }}.tar.xz" \
+          "https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/${{ inputs.sdk-version }}.tar.xz"
+        sha256sum "$src/tarballs/${{ inputs.sdk-version }}.tar.xz"
+        sdk="${{ inputs.sdk-version }}"; sdk="${sdk#MacOSX}"; sdk="${sdk%.sdk}"
+        (cd "$src" && UNATTENDED=1 SDK_VERSION="$sdk" TARGET_DIR="${{ steps.paths.outputs.target-dir }}" ./build.sh)
+
+    - name: Show toolchain
+      shell: bash
+      run: ls "${{ steps.paths.outputs.target-dir }}/bin" | grep -E 'clang\+\+$'

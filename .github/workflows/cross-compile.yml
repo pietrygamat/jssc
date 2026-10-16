@@ -141,21 +141,25 @@ jobs:
           git commit --allow-empty -m "Precompiled natives (@${{ needs.create-branch.outputs.base_rev }}) for ${{ matrix.target }}"
           while  git pull --rebase && ! git push; do sleep 5; done
 
+  # macOS natives are cross-compiled on Linux with osxcross against the same 10.9 / 11.0 SDKs the
+  # macOS runners used (B-03 direction B), so no Mac is involved in producing release binaries.
   macos:
-    runs-on: macos-14
+    runs-on: ubuntu-24.04
     needs: create-branch
     strategy:
       matrix:
         include:
           - target: osx_64
-            profile: 'x86_64'
-            macos-deployment-target: 10.9
+            os-target-arch: x86_64
+            osxcross-arch: x86_64
             sdk-version: MacOSX10.9.sdk
+            macos-deployment-target: 10.9
 
           - target: osx_arm64
-            profile: 'aarch64'
-            macos-deployment-target: 11.0
+            os-target-arch: aarch_64
+            osxcross-arch: arm64
             sdk-version: MacOSX11.0.sdk
+            macos-deployment-target: 11.0
 
     steps:
       - name: Checkout
@@ -167,25 +171,28 @@ jobs:
           java-version: 11
           distribution: temurin
 
-      - run: brew install socat
+      - id: osxcross
+        uses: ./.github/actions/setup-osxcross
+        with:
+          sdk-version: ${{ matrix.sdk-version }}
 
-      - name: Get oldest supported SDK
-        run: |
-          SDKS_DIR="$(xcrun --show-sdk-platform-path)/Developer/SDKs"
-          wget -qO- https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/${{ matrix.sdk-version }}.tar.xz \
-            | tar -xjv -C "$SDKS_DIR"
-          echo "SDKS_DIR=$SDKS_DIR" >> $GITHUB_ENV
+      - name: Keep the previous release's library for comparison
+        run: cp src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib "${RUNNER_TEMP}/previous.dylib"
 
-      - name: Set SDK version
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos-deployment-target }}
-          export SDKROOT=$SDKS_DIR/${{ matrix.sdk-version }}
-          export CMAKE_OSX_SYSROOT=$SDKROOT
-          echo "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET" >> $GITHUB_ENV
-          echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
-          echo "CMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT" >> $GITHUB_ENV
       - name: Build with Maven
-        run: mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled
+        run: mvn -B clean install -P osxcross,update-resources-precompiled -Dos.target.arch=${{ matrix.os-target-arch }}
+        env:
+          OSXCROSS_TARGET_DIR: ${{ steps.osxcross.outputs.target-dir }}
+          OSXCROSS_ARCH: ${{ matrix.osxcross-arch }}
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-deployment-target }}
+
+      - name: Check deployment target and new imports
+        run: >
+          OTOOL=$(ls /usr/bin/llvm-otool* | head -1) NM=$(ls /usr/bin/llvm-nm* | head -1)
+          .github/scripts/check-macos-dylib.sh
+          src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib
+          ${{ matrix.macos-deployment-target }}
+          "${RUNNER_TEMP}/previous.dylib"
 
       - name: Push recompiled binaries
         run: |

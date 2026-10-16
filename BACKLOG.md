@@ -40,7 +40,7 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 - tresf's glibc script: gist `tresf/b00fd445ca90742b09af1b315d092eae` (linked in #190).
 - **Done when:** the release cannot proceed silently with stale or incompatible natives.
 
-### B-03 macOS CI runner / SDK strategy before `macos-14` is retired (open)
+### B-03 macOS CI runner / SDK strategy before `macos-14` is retired (direction B implemented on branch `claude/backlog-b02-b03-b17-enp1qa-b03-osxcross`, not yet run in CI)
 - **Refs:** #201 (macos-latest rejects SDK < 14.0), #178, #185, #187, #189, #54.
 - **Current:** `build.yml` and `cross-compile.yml` pin `runs-on: macos-14`, download `MacOSX10.9.sdk`/`MacOSX11.0.sdk` from phracker/MacOSX-SDKs, and set `MACOSX_DEPLOYMENT_TARGET` through `$GITHUB_ENV`.
 - **Proposal (tresf):** use `macos-15` + `macos-15-intel` with the bundled SDK and rely on `MACOSX_DEPLOYMENT_TARGET` (10.9 / 11.0), as LMMS does.
@@ -57,11 +57,11 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
   | Risk | Evidence | Status |
   |---|---|---|
   | `build.yml` x86_64 leg installs `g++-`, which apt reads as "remove g++" | Fork run 38823493877: "The following packages will be REMOVED: g++", then CMake picks Clang 18. The leg passes, but it has not tested a GCC build since the line was added. The pipeline audit called it a hard failure; on GitHub's image it is a silent compiler switch. | fixed in the hardening PR |
-  | Floating `ubuntu-latest`/`windows-latest`/`macos-latest` | Audit: Ubuntu 26.04 cross g++ packages lack the multiarch header path; #190/#201 were caused by floating images | pinned (`ubuntu-24.04`, `windows-2025`, `macos-14`); weekly `env-canary.yml` builds on the next images |
+  | Floating `ubuntu-latest`/`windows-latest`/`macos-latest` | Audit: Ubuntu 26.04 cross g++ packages lack the multiarch header path; #190/#201 were caused by floating images | pinned (`ubuntu-24.04`, `windows-2025`, `macos-15`/`macos-15-intel` for tests); weekly `env-canary.yml` builds on the next images |
   | `actions/checkout@v3`, `actions/setup-java@v3` | Runner warns "setup-java v3 is deprecated" and forces their Node 20 runtime onto Node 24 | bumped to v5 |
   | `apt-get install maven openjdk-17-jdk-headless` inside the pinned dockcross images (Debian bullseye, archive no longer maintained) | 404s seen locally on `b10-native-loader` (2026-10-16); the last fork cross-compile run (2026-08-24) still passed | runner JDK 11 + Maven mounted read-only instead; needs one cross-compile run to confirm |
   | `$XCODE_16_DEVELOPER_DIR` in the macOS SDK step | image-specific variable; disappears when the image drops Xcode 16 | replaced by `xcrun --show-sdk-platform-path` |
-  | phracker SDK tarballs are downloaded without a checksum | third-party mirror, unpinned content | open: record the sha256 from the next CI run and verify it (direction A drops the download) |
+  | phracker SDK tarballs are downloaded without a checksum | third-party mirror, unpinned content | open: `setup-osxcross` prints the sha256 on a cache miss; pin it (and the osxcross commit, now `master`) after the first verified run |
   | `cmake_minimum_required(VERSION 3.5)` | runner CMake prints "Compatibility with CMake < 3.10 will be removed"; CMake 4.0 already removed < 3.5 | open, deliberately not changed: raising it switches policies (e.g. CMP0091 MSVC runtime from 3.15) and can change the natives (#113 lesson). The canary shows when it breaks. |
   | dockcross `20231208-4e4d3ad` frozen since Dec 2023 | see B-12 | canary checks the images still exist; refresh tracked in B-12 |
 
@@ -192,7 +192,7 @@ The wiki is a separate git repo, `https://github.com/java-native/jssc.wiki.git`.
 - Remove the unused `dependency.logback.version` property (logback was replaced in #159).
 - Remove or replace stale TODOs once the related items are resolved: `armhf`/`armsf` namespace TODO (B-11); CMake `# TODO: Handle arm, hardfloat`; `-Werror`/`/WX` TODOs (#15 history: warnings-as-errors was dropped; be careful, see the #113 lesson).
 - `SerialNativeInterface`: "TODO: This class is effectively static, why instantiate it?" Not easily fixable because some JNI functions are instance methods (#105). Only revisit with a native-signature-changing release.
-- `MH_DYLIB_STUB` deprecation warnings from SDK 10.9 (#178): ignored for now; revisit with B-03.
+- `MH_DYLIB_STUB` deprecation warnings from SDK 10.9 (#178): stay with B-03 direction B (same SDK, now through osxcross); disappear with direction A.
 
 ### B-21 Code style tooling (deferred)
 - **Refs:** #12 (open, milestone 5.0.0), #61 (dup).
