@@ -207,3 +207,5 @@ jobs:
       # Same check as the release workflow, so a stale or missing native shows up before the branch is merged
       - name: Verify the natives were rebuilt
         run: .github/scripts/check-natives-fresh.sh
+      - name: Verify the natives still load on the oldest supported systems
+        run: sudo apt-get update && sudo apt-get install --yes llvm && .github/scripts/check-natives-compat.sh

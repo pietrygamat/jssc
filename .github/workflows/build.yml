@@ -51,6 +51,14 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install socat ${{ matrix.packages }}
       - run: mvn -P "${{ matrix.profile }}" --batch-mode
 
+  # Glibc floor, macOS deployment target, Windows version and dependencies of the committed natives
+  natives:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt-get update && sudo apt-get install --yes llvm
+      - run: .github/scripts/check-natives-compat.sh
+
   macos:
     runs-on: [macos-14]
     strategy:

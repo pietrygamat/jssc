@@ -55,7 +55,7 @@ Notes:
 - Binary compatibility is a project goal: target the oldest systems you can.
   - Linux natives come from dockcross images pinned by `DOCK_CROSS_TAG`, which keeps the glibc floor from rising (#190/#191). Measured on the 2.10.4 natives: `linux_64` needs GLIBC 2.14 (`memcpy`), `linux_arm64` 2.17, `linux_32` and `linux_arm` 2.28 (`fcntl`), `linux_ppc`/`linux_riscv*` 2.34. The often-quoted "2.3" is the bulk of the symbols, not the maximum. `linux_arm` is built for ARMv6 (`linux-armv6-lts`, #139), so a local `-P armhf` build is not equivalent.
   - macOS x86_64 uses `MacOSX10.9.sdk` with deployment target 10.9. That is the minimum Apple notarization accepts (#54, #187). arm64 uses SDK and target 11.0.
-  - The `show-file-info` Ant target prints `file` and `otool` minos output, so you can check this.
+  - The `show-file-info` Ant target prints `file` and `otool` minos output, so you can check this. `.github/scripts/check-natives-compat.sh [dir]` checks every committed native against a limits table (max GLIBC, macOS minos, PE subsystem version, allowed dependencies, CPU); it runs in `build.yml`, `cross-compile.yml` and before a release. A new natives directory needs a row there.
 - Users can bypass extraction with `-Djssc.boot.library.path=<dir>` (#92). This is required in sandboxed environments.
 
 ## Versioning & release

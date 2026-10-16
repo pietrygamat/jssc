@@ -36,6 +36,8 @@ jobs:
       # 2.10.3 went out with the 2.10.2 binaries (#205); refuse to release stale natives
       - name: Verify precompiled natives were rebuilt for this release
         run: .github/scripts/check-natives-fresh.sh ${{ github.event.inputs.releaseVersion }}
+      - name: Verify precompiled natives still load on the oldest supported systems
+        run: sudo apt-get update && sudo apt-get install --yes llvm && .github/scripts/check-natives-compat.sh
       - name: Publish artifacts to Maven Central
         run: mvn -B release:prepare release:perform -P package,maven-central-release ${VERSIONS}
         env:
