@@ -116,13 +116,18 @@ jobs:
       - name: Build for ${{ matrix.target }} in ${{ matrix.image }}
         run: |
           MAVEN_DIR=$(dirname "$(dirname "$(readlink -f "$(command -v mvn)")")")
-          echo "JDK: ${JAVA_HOME}, Maven: ${MAVEN_DIR}"
+          # The runner JDK's cacerts is a symlink into the runner's /etc/ssl, which the container
+          # doesn't have; mount the resolved file, or Maven can't reach Central over TLS
+          CACERTS=$(readlink -f "${JAVA_HOME}/lib/security/cacerts")
+          echo "JDK: ${JAVA_HOME}, Maven: ${MAVEN_DIR}, cacerts: ${CACERTS}"
           docker run --rm --workdir=/work \
                 --volume $PWD:/work \
                 --volume $HOME/.m2:/root/.m2 \
                 --volume "${JAVA_HOME}:/opt/jdk:ro" \
                 --volume "${MAVEN_DIR}:/opt/maven:ro" \
+                --volume "${CACERTS}:/opt/cacerts:ro" \
                 --env JAVA_HOME=/opt/jdk \
+                --env JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/opt/cacerts \
                 --env MAVEN_OPTS=${MAVEN_OPTS} \
                 ${{ matrix.image }} \
                 bash -c \
