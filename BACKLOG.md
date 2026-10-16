@@ -49,6 +49,21 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
   - The binary loads on old macOS (10.9 for x86_64).
   - `show-file-info` reports the expected `minos`.
 - **Done when:** CI no longer depends on a deprecated runner and the release dylibs are verified as above.
+- **Directions (2026-10-16, one draft PR each, both stacked on the environment hardening below):**
+  - *A, runners:* `macos-15` (arm64) + `macos-15-intel` with the Xcode SDK and `MACOSX_DEPLOYMENT_TARGET` (tresf's proposal). Small change, but `macos-15-intel` is the last Intel image, so x86_64 later has to move to a cross build on arm64.
+  - *B, no Mac:* osxcross on the Ubuntu runner with the same phracker 10.9/11.0 SDKs (attached "macOS without a Mac" roadmap). Keeps today's SDKs, so the binaries stay closest to 2.10.4; adds a toolchain to maintain. A macOS runner is then only needed for tests.
+- **Stale build environment (the other risks found while planning B-03):**
+
+  | Risk | Evidence | Status |
+  |---|---|---|
+  | `build.yml` x86_64 leg installs `g++-`, which apt reads as "remove g++" | Fork run 38823493877: "The following packages will be REMOVED: g++", then CMake picks Clang 18. The leg passes, but it has not tested a GCC build since the line was added. The pipeline audit called it a hard failure; on GitHub's image it is a silent compiler switch. | fixed in the hardening PR |
+  | Floating `ubuntu-latest`/`windows-latest`/`macos-latest` | Audit: Ubuntu 26.04 cross g++ packages lack the multiarch header path; #190/#201 were caused by floating images | pinned (`ubuntu-24.04`, `windows-2025`, `macos-14`); weekly `env-canary.yml` builds on the next images |
+  | `actions/checkout@v3`, `actions/setup-java@v3` | Runner warns "setup-java v3 is deprecated" and forces their Node 20 runtime onto Node 24 | bumped to v5 |
+  | `apt-get install maven openjdk-17-jdk-headless` inside the pinned dockcross images (Debian bullseye, archive no longer maintained) | 404s seen locally on `b10-native-loader` (2026-10-16); the last fork cross-compile run (2026-08-24) still passed | runner JDK 11 + Maven mounted read-only instead; needs one cross-compile run to confirm |
+  | `$XCODE_16_DEVELOPER_DIR` in the macOS SDK step | image-specific variable; disappears when the image drops Xcode 16 | replaced by `xcrun --show-sdk-platform-path` |
+  | phracker SDK tarballs are downloaded without a checksum | third-party mirror, unpinned content | open: record the sha256 from the next CI run and verify it (direction A drops the download) |
+  | `cmake_minimum_required(VERSION 3.5)` | runner CMake prints "Compatibility with CMake < 3.10 will be removed"; CMake 4.0 already removed < 3.5 | open, deliberately not changed: raising it switches policies (e.g. CMP0091 MSVC runtime from 3.15) and can change the natives (#113 lesson). The canary shows when it breaks. |
+  | dockcross `20231208-4e4d3ad` frozen since Dec 2023 | see B-12 | canary checks the images still exist; refresh tracked in B-12 |
 
 ### B-04 Infinite loop: `closePort` racing `readBytes` (open)
 - **Refs:** #95 (open), #90 (synchronized Java side), #94 (fixed by #155), #126 (open), #127 (draft).
