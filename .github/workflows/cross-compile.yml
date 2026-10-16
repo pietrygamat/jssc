@@ -124,6 +124,8 @@ jobs:
                     -Dos.target.name=${{ matrix.os_target_name }} \
                     -Dos.target.arch=${{ matrix.os_target_arch }} \
                     -Dos.target.bitness=${{ matrix.os_target_bitness }} \
+                    -Djssc.build.rev=${{ needs.create-branch.outputs.base_rev }} \
+                    -Djssc.build.origin=${{ github.repository }} \
                   '
 
       - name: Push recompiled binaries
@@ -177,7 +179,10 @@ jobs:
           echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
           echo "CMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT" >> $GITHUB_ENV
       - name: Build with Maven
-        run: mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled
+        run: |
+          mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled \
+            -Djssc.build.rev=${{ needs.create-branch.outputs.base_rev }} \
+            -Djssc.build.origin=${{ github.repository }}
 
       - name: Push recompiled binaries
         run: |

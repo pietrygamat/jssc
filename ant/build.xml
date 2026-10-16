@@ -259,6 +259,9 @@
     </target>
 
     <target name="cmake-generate">
+        <!-- Build ident: blank lets CMake take the revision from git and say "local" (cross-compile.yml sets both) -->
+        <property description="fallback value" name="jssc.build.rev" value=""/>
+        <property description="fallback value" name="jssc.build.origin" value=""/>
         <mkdir dir="${cmake.generated.directory}"/>
         <exec executable="cmake" dir="${cmake.generated.directory}" failonerror="true">
             <arg line="${ant.project.basedir}"/>
@@ -266,6 +269,8 @@
             <arg line="${cmake.generator.nativelibdir}"/>
             <!-- Set the JSSC version to parameter -->
             <arg line="-DJSSC_VERSION=&quot;${release.version}&quot;" />
+            <arg line="-DJSSC_BUILD_REV=&quot;${jssc.build.rev}&quot;" />
+            <arg line="-DJSSC_BUILD_ORIGIN=&quot;${jssc.build.origin}&quot;" />
             <!-- Pass-in maven's JAVA_HOME, helps resolve jni.h -->
             <arg line="-DJAVA_HOME=&quot;${java.home}&quot;"/>
             <!-- Final generator argument should be blank or one of:

@@ -179,9 +179,35 @@ if(NOT JSSC_VERSION)
 else()
     message(STATUS "Release JSSC version based on pom.xml: \"${JSSC_VERSION}\"")
 endif()
+# Build ident (src/main/cpp/ident.cpp). ant/build.xml passes the revision and origin; when blank,
+# the revision is taken from git ("-dirty" if native sources have uncommitted changes) and origin=local.
+if(NOT JSSC_BUILD_REV)
+    set(JSSC_BUILD_REV "unknown")
+    find_package(Git QUIET)
+    if(GIT_FOUND)
+        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            RESULT_VARIABLE GIT_RESULT OUTPUT_VARIABLE GIT_REV
+            OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        if(GIT_RESULT EQUAL 0)
+            set(JSSC_BUILD_REV "${GIT_REV}")
+            execute_process(COMMAND ${GIT_EXECUTABLE} status --porcelain -- src/main/cpp toolchain CMakeLists.txt
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                OUTPUT_VARIABLE GIT_DIRTY OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+            if(GIT_DIRTY)
+                set(JSSC_BUILD_REV "${JSSC_BUILD_REV}-dirty")
+            endif()
+        endif()
+    endif()
+endif()
+if(NOT JSSC_BUILD_ORIGIN)
+    set(JSSC_BUILD_ORIGIN "local")
+endif()
+set(JSSC_IDENT "@(#)JSSC-IDENT version=${JSSC_VERSION} rev=${JSSC_BUILD_REV} target=${NATIVE_LIB_DIR} origin=${JSSC_BUILD_ORIGIN}")
+message(STATUS "Native library ident: ${JSSC_IDENT}")
 configure_file(src/main/cpp/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 
-add_library(jssc SHARED src/main/cpp/${CPP_SOURCE}/jssc.cpp)
+add_library(jssc SHARED src/main/cpp/${CPP_SOURCE}/jssc.cpp src/main/cpp/ident.cpp)
 
 # Fall-back header for when maven is not available
 list(APPEND JSSC_ADDITIONAL_INCLUDES src/main/cpp/)
