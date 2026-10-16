@@ -118,7 +118,8 @@ jobs:
                 --env MAVEN_OPTS=${MAVEN_OPTS} \
                 ${{ matrix.image }} \
                 bash -c \
-                  'apt-get update && apt-get install --yes maven openjdk-17-jdk-headless && \
+                  'sed -i s/deb.debian.org/archive.debian.org/ /etc/apt/sources.list && \
+                   apt-get update && apt-get install --yes maven openjdk-17-jdk-headless && \
                    mvn -B clean install -P dockcross,update-resources-precompiled \
                     -Dos.target.name=${{ matrix.os_target_name }} \
                     -Dos.target.arch=${{ matrix.os_target_arch }} \
