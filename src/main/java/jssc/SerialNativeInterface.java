@@ -24,8 +24,10 @@
  */
 package jssc;
 
-import org.scijava.nativelib.NativeLoader;
+import org.scijava.nativelib.JniExtractor;
+import org.scijava.nativelib.NativeLibraryUtil;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -35,6 +37,7 @@ import java.io.IOException;
 public class SerialNativeInterface {
 
     private static final String libVersion = "2.10.4";
+    private static final String libName = "jssc";
 
     /** Linux **/
     public static final int OS_LINUX = 0;
@@ -113,18 +116,56 @@ public class SerialNativeInterface {
             osType = OS_MAC_OS_X;
         else
             osType = OS_UNKNOWN;
+        loadNativeLibrary();
+    }
+
+    /**
+     * JSSC includes a small, platform-specific shared library and uses native-lib-loader for extraction.
+     * - First, it attempts to load this library from the system library path.
+     * - Next, it will fallback to <code>jssc.boot.library.path</code>
+     * - Finally it will attempt to extract the library from the jssc.jar file, and load it.
+     *
+     * native-lib-loader only locates or extracts the file; the library is loaded from this class.
+     * JNI binds native methods only to libraries loaded by the class loader of the declaring class,
+     * so a library loaded by native-lib-loader's own class loader (e.g. a separate OSGi bundle)
+     * would leave the native methods below unbound.
+     */
+    private static void loadNativeLibrary() {
         try {
-            /*
-             * JSSC includes a small, platform-specific shared library and uses native-lib-loader for extraction.
-             * - First, native-lib-loader will attempt to load this library from the system library path.
-             * - Next, it will fallback to <code>jssc.boot.library.path</code>
-             * - Finally it will attempt to extract the library from from the jssc.jar file, and load it.
-             */
-            NativeLoader.setJniExtractor(new DefaultJniExtractorStub(null, System.getProperty("jssc.boot.library.path")));
-            NativeLoader.loadLibrary("jssc");
-        } catch (IOException ioException) {
-            throw new UnsatisfiedLinkError("Could not load the jssc library: " + ioException.getMessage());
+            System.loadLibrary(libName);
+            return;
+        } catch (UnsatisfiedLinkError notOnLibraryPath) {
+            // fall back to jssc.boot.library.path or extraction
         }
+        try {
+            String bootPath = System.getProperty("jssc.boot.library.path");
+            File lib = locateLibrary(new DefaultJniExtractorStub(SerialNativeInterface.class, bootPath));
+            System.load(lib.getAbsolutePath());
+        } catch (IOException ioException) {
+            throw linkError(ioException);
+        } catch (UnsatisfiedLinkError linkError) {
+            throw linkError(linkError);
+        }
+    }
+
+    /**
+     * Same search paths as native-lib-loader: <code>natives/</code>, the jar root and <code>META-INF/lib/</code>
+     */
+    private static File locateLibrary(JniExtractor extractor) throws IOException {
+        for (String searchPath : new String[] { NativeLibraryUtil.DEFAULT_SEARCH_PATH, "", "META-INF/lib" }) {
+            File lib = extractor.extractJni(NativeLibraryUtil.getPlatformLibraryPath(searchPath), libName);
+            if (lib != null) {
+                return lib;
+            }
+        }
+        throw new IOException("Couldn't find " + NativeLibraryUtil.getPlatformLibraryName(libName)
+                + " for architecture " + NativeLibraryUtil.getArchitecture());
+    }
+
+    private static UnsatisfiedLinkError linkError(Throwable cause) {
+        UnsatisfiedLinkError error = new UnsatisfiedLinkError("Could not load the jssc library: " + cause.getMessage());
+        error.initCause(cause);
+        return error;
     }
 
     /**
