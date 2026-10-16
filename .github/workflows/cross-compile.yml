@@ -152,14 +152,14 @@ jobs:
           - target: osx_64
             os-target-arch: x86_64
             osxcross-arch: x86_64
-            sdk-version: MacOSX10.9.sdk
-            macos-deployment-target: 10.9
+            sdk-version: MacOSX11.0.sdk
+            macos-deployment-target: '10.9'
 
           - target: osx_arm64
             os-target-arch: aarch_64
             osxcross-arch: arm64
             sdk-version: MacOSX11.0.sdk
-            macos-deployment-target: 11.0
+            macos-deployment-target: '11.0'
 
     steps:
       - name: Checkout

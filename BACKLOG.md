@@ -51,7 +51,7 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 - **Done when:** CI no longer depends on a deprecated runner and the release dylibs are verified as above.
 - **Directions (2026-10-16, one draft PR each, both stacked on the environment hardening below):**
   - *A, runners:* `macos-15` (arm64) + `macos-15-intel` with the Xcode SDK and `MACOSX_DEPLOYMENT_TARGET` (tresf's proposal). Small change, but `macos-15-intel` is the last Intel image, so x86_64 later has to move to a cross build on arm64.
-  - *B, no Mac:* osxcross on the Ubuntu runner with the same phracker 10.9/11.0 SDKs (attached "macOS without a Mac" roadmap). Keeps today's SDKs, so the binaries stay closest to 2.10.4; adds a toolchain to maintain. A macOS runner is then only needed for tests.
+  - *B, no Mac:* osxcross on the Ubuntu runner with the phracker 11.0 SDK for both architectures (attached "macOS without a Mac" roadmap); x86_64 keeps deployment target 10.9. The 10.9 SDK has no libc++ headers (on a Mac, Xcode supplies them), so osxcross cannot use it (CI: "osxcross: error: cannot find libc++ headers"). Still an old, fixed SDK, so the binaries stay closer to 2.10.4 than with direction A; adds a toolchain to maintain. A macOS runner is then only needed for tests.
 - **Stale build environment (the other risks found while planning B-03):**
 
   | Risk | Evidence | Status |
@@ -192,7 +192,7 @@ The wiki is a separate git repo, `https://github.com/java-native/jssc.wiki.git`.
 - Remove the unused `dependency.logback.version` property (logback was replaced in #159).
 - Remove or replace stale TODOs once the related items are resolved: `armhf`/`armsf` namespace TODO (B-11); CMake `# TODO: Handle arm, hardfloat`; `-Werror`/`/WX` TODOs (#15 history: warnings-as-errors was dropped; be careful, see the #113 lesson).
 - `SerialNativeInterface`: "TODO: This class is effectively static, why instantiate it?" Not easily fixable because some JNI functions are instance methods (#105). Only revisit with a native-signature-changing release.
-- `MH_DYLIB_STUB` deprecation warnings from SDK 10.9 (#178): stay with B-03 direction B (same SDK, now through osxcross); disappear with direction A.
+- `MH_DYLIB_STUB` deprecation warnings from SDK 10.9 (#178): disappear with either B-03 direction (both stop using SDK 10.9).
 
 ### B-21 Code style tooling (deferred)
 - **Refs:** #12 (open, milestone 5.0.0), #61 (dup).

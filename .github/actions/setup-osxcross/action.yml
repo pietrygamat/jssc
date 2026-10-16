@@ -8,7 +8,7 @@ description: >
 
 inputs:
   sdk-version:
-    description: 'SDK directory name, e.g. MacOSX10.9.sdk'
+    description: 'SDK directory name, e.g. MacOSX11.0.sdk (the 10.9 SDK has no libc++ headers)'
     required: true
   osxcross-ref:
     description: 'osxcross git ref; pin to a commit SHA once a build has been verified'
