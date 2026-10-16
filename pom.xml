@@ -301,6 +301,12 @@
         <configuration>
           <!-- Separate JVMs between classes; Needed for "jssc.boot.library.path" test to be effective -->
           <reuseForks>false</reuseForks>
+          <systemPropertyVariables>
+            <!-- BuildOutputTest -->
+            <jssc.test.release.version>${release.version}</jssc.test.release.version>
+            <jssc.test.cmake.build.skip>${cmake.build.skip}</jssc.test.cmake.build.skip>
+            <jssc.test.target.java.version>${target.java.version}</jssc.test.target.java.version>
+          </systemPropertyVariables>
           <excludes>
             <!--suppress UnresolvedMavenProperty -->
             <exclude>${maven.exclude.tests}</exclude>

@@ -52,7 +52,7 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 
 ### B-04 Infinite loop: `closePort` racing `readBytes` (open)
 - **Refs:** #95 (open), #90 (synchronized Java side), #94 (fixed by #155), #126 (open), #127 (draft).
-- **What:** in native `readBytes` on *nix, a concurrent `close(fd)` can leave the `poll`/`select` + `read` loop spinning. The Java `synchronized` methods narrow the window but don't cover direct `SerialNativeInterface` use or `select()` on Linux.
+- **What:** in native `readBytes` on *nix, a concurrent `close(fd)` can leave the `poll`/`select` + `read` loop spinning. Confirmed 2026-10-16 for the unplug case too: after a hangup `read()` returns 0 and the loop retries forever (`VirtualPortRegressionTest.readAfterUnplugFailsInsteadOfHanging`, ignored until this is fixed). The Java `synchronized` methods narrow the window but don't cover direct `SerialNativeInterface` use or `select()` on Linux.
 - **Do:**
   - Make the *nix read loop terminate on `POLLNVAL`/`EBADF`/`POLLHUP` and on `read()==0` (EOF), raising `IOException`.
   - Consider a bounded poll timeout so the loop can re-check the fd, as #127 does with 100 ms.
@@ -148,15 +148,21 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 - **Do:** a design proposal first. On Windows: SetupAPI hardware IDs. On Linux: `/dev/serial/by-id`, sysfs. On macOS: IOKit. Keep the existing `getPortNames` API unchanged.
 - This is the largest feature on the list. It needs maintainer agreement before code.
 
-### B-17 Better / more unit tests (partial)
+### B-17 Better / more unit tests (partial; regression tests on branch `claude/backlog-b02-b03-b17-enp1qa-b17-tests`)
 - **Refs:** #37 (open since 2019), #47, #151, #155, #182 (port-pattern tests were wanted), #107 (unplug scenarios).
-- **Ideas:**
-  - Port-name regex tests per OS, including the Moxa names and `getPortNames(Pattern)`.
-  - Listener lifecycle tests with `socat`.
-  - A test that a 0-byte `readBytes` is allowed (#192).
-  - Re-enable the macOS test from B-06.
-  - Split the threading out of `VirtualPortRule`, as tresf suggested in #47.
+- **Done on the branch:** one test per recurring lesson in JOURNAL.md; the "Lessons → guards" table there maps each one. Port-name tests incl. Moxa and `getPortNames(Pattern)`; listener lifecycle and unplug with `socat` (`VirtualPortRule.unplug()`); 0-byte read on a real port; baud rate read back with `stty` (catches the #113 cast, checked by reintroducing it); fd ≥ 1024; Turkish locale; exception hierarchy; tests load the native just built; class-file version.
+  - `VirtualPortRule` now has one executor per rule instance; the shared static one was shut down after the first test, so a class could only hold one socat test.
+- **Found while writing them:**
+  - Reading from an unplugged port hangs on Linux (test `readAfterUnplugFailsInsteadOfHanging`, `@Ignore`d): `read()` returns 0 after the hangup and the native loop retries forever. Same root cause as B-04; enable the test with that fix.
+  - `setParams` returns false on a pseudo terminal although the termios settings are applied, because the RTS/DTR ioctl fails. Expected for ptys, but it means `setParams`'s result can't tell "settings rejected" from "no modem lines".
+  - B-25: an incremental build leaves Java 9 class files.
+- **Still open:** re-enable the macOS test from B-06; Windows virtual ports.
 - Windows virtual ports still aren't feasible (signed drivers).
+
+### B-25 Incremental builds produce Java 9 class files (open)
+- **What:** after a source change without `mvn clean`, the `jdk9+` profile's first compiler pass (`--release 9`, for `module-info`) rewrites all classes, and the second pass (`minimal-target-jre-recompile`) reports "Nothing to compile - all classes are up to date". The jar then holds major version 53 instead of 50/51/52. Reproduced on JDK 21: `touch src/main/java/jssc/SerialPort.java && mvn compile` → `SerialPort.class` major 53.
+- **Impact:** release and CI builds start from a clean checkout and are fine; local and IDE builds are not (the #110 lesson). `BuildOutputTest.classFilesTargetTheConfiguredJavaVersion` now fails such a build.
+- **Do:** make the second pass always recompile (e.g. a separate output directory for the module pass, or `useIncrementalCompilation`/stale-source settings), then verify with the test.
 
 ---
 

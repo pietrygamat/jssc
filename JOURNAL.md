@@ -177,6 +177,22 @@ Conventions: `#N` = upstream issue/PR number. People are referred to by GitHub h
 - Floating CI images (`ubuntu-latest`, dockcross `latest`, `macos-latest`) silently change binary compatibility (#190, #201).
 - Always check that release natives were actually rebuilt (compare hashes against the previous release, #205), and check glibc symbol versions and macOS `minos`/`sdk` (`show-file-info` ant target, #178).
 
+**Lessons → guards (2026-10-16).** Each recurring mistake now has a check that fails when it comes back (B-02, B-03, B-17 proposals):
+
+| Lesson | Guard |
+|---|---|
+| Warning "fix" truncated the Windows baud rate (#113) | `VirtualPortRegressionTest.baudRateReachesTheDriverUnchanged` reads the speed back with `stty` (*nix only; Windows has no virtual ports) |
+| Native validation rejected 0-byte reads (#175 → #192) | `VirtualPortRegressionTest.zeroByteReadOnAnOpenPortReturnsEmptyArray`, `SerialNativeInterfaceTest.returnsAnEmptyArrayIfCountIsZero` |
+| Floating images changed the glibc floor / macOS target (#190, #187, #201) | pinned runners + weekly `env-canary.yml`; glibc/minos/subsystem limits checked on every build (B-02) |
+| Stale natives released (#205) | `check-natives-fresh.sh` before `release:prepare` |
+| Tests ran against a different native than the one built (#51, #65, #174) | `BuildOutputTest.testsUseTheNativeLibraryJustBuilt` |
+| Release jar built for the wrong Java version (#110) | `BuildOutputTest.classFilesTargetTheConfiguredJavaVersion` (it also exposed B-25) |
+| `select()` crashed with fd ≥ 1024 (#90) | `VirtualPortRegressionTest.worksWithFileDescriptorsAbove1024` |
+| Close threw on a vanished device, leaving ghost ports (#107/#181) | `closePortAfterUnplugDoesNotThrow`, `eventListenerLifecycle` |
+| Read on an unplugged device looped forever (#94) | `readAfterUnplugFailsInsteadOfHanging`, ignored: still hangs on Linux (B-04) |
+| Turkish locale broke loading (#80) | `TurkishLocaleLoadTest` (independent of which loader is used, see B-10) |
+| Exceptions moved under `IOException` (#160) | `SerialPortExceptionHierarchyTest` |
+
 ### API behaviour & exceptions
 - **#107 / #181 (2.10.0):** `closePort()` used to throw before reaching native close when a USB adapter had vanished (through `removeEventListener` → `setEventsMask`), leaving ghost COM ports on Windows.
   - Decision: closing and removing listeners should do best-effort cleanup and not throw.
