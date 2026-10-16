@@ -65,6 +65,14 @@ public class VirtualPortRegressionTest extends DisplayMethodNameRule {
     @Test
     public void baudRateReachesTheDriverUnchanged() throws Exception {
         assumeTrue("stty -F is Linux syntax", SerialNativeInterface.getOsType() == SerialNativeInterface.OS_LINUX);
+        // jssc locks the port with TIOCEXCL, which stops stty from opening it (only root may)
+        port.closePort();
+        System.setProperty(SerialNativeInterface.PROPERTY_JSSC_NO_TIOCEXCL, "true");
+        try {
+            assertTrue(port.openPort());
+        } finally {
+            System.clearProperty(SerialNativeInterface.PROPERTY_JSSC_NO_TIOCEXCL);
+        }
         int[] rates = {300, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
         for (int rate : rates) {
             // The return value is false on a pseudo terminal: termios is applied, but it has no modem
