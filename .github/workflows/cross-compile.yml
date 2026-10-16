@@ -193,6 +193,8 @@ jobs:
     needs: [create-branch, linux-windows, macos]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # check-natives-fresh.sh compares with the previous release tag
       - name: Squash into one commit
         run: |
           git config --global user.email "${GITHUB_BOT_EMAIL}"
@@ -202,3 +204,6 @@ jobs:
           git add src/main/resources-precompiled/**
           git commit -m "Precompiled natives @${{ needs.create-branch.outputs.base_rev }}"
           git push -f
+      # Same check as the release workflow, so a stale or missing native shows up before the branch is merged
+      - name: Verify the natives were rebuilt
+        run: .github/scripts/check-natives-fresh.sh

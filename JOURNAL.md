@@ -262,7 +262,7 @@ Conventions: `#N` = upstream issue/PR number. People are referred to by GitHub h
   - #196 (open): a CH340E on macOS reports RXCHAR value 32 for 1 byte. Probably a driver issue.
   - #198: macOS privacy (Full Disk Access) blocked I/O. That was user configuration.
 - **glibc floor (#190/#191):**
-  - The cross-compile pipeline pins `DOCK_CROSS_TAG: 20231208-4e4d3ad`, giving glibc 2.3 for x86/x64.
+  - The cross-compile pipeline pins `DOCK_CROSS_TAG: 20231208-4e4d3ad`, which brought the floor back down from 2.35. *Correction (2026-10-16, `readelf -V` on the committed binaries):* the maximum required version is 2.14 for `linux_64` (`memcpy`) and 2.28 for `linux_32` (`fcntl`), already in 2.9.6; most other symbols are 2.0–2.3. Per-target maxima for 2.10.4 are in CLAUDE.md.
   - tresf: pinning loses upstream fixes, and pinning Windows images isn't needed. Long-term options: `dockcross/manylinux*` images, or ask dockcross for an `-lts`-style legacy image.
   - The principle: **"The initial spirit of JSSC was to work on the oldest-possible distro"** (macOS ~12 years back, Windows back to XP).
   - A glibc matrix per JSSC version is in tresf's gist (linked from #190).

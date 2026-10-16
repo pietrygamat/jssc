@@ -30,15 +30,20 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
   - Review #201/#203 for large stack allocations or recursion.
 - **Done when:** the root cause is found and fixed, or the report is shown to be invalid with evidence.
 
-### B-02 Release pipeline must verify that natives were rebuilt (open)
+### B-02 Release pipeline must verify that natives were rebuilt (proposed, see split below)
 - **Refs:** #205 (2.10.3 shipped 2.10.2 binaries), #190 (glibc floor jumped to 2.35), #187 (bad macOS target), #178 (`show-file-info` minos).
 - **Do:** add an automated check to `cross-compile.yml` and/or `release-new-version.yml` that does the following:
   - Asserts each native's hash differs from the previous release whenever native sources changed, or at least prints old and new hashes.
-  - Asserts the max `GLIBC_x.y` symbol version for Linux x86/x64 (expect ≤ 2.4, currently 2.3).
+  - Asserts the max `GLIBC_x.y` symbol version for every Linux target. Measured on 2.10.4 (not 2.3 as assumed earlier): `linux_32` 2.28, `linux_64` 2.14, `linux_arm` 2.28, `linux_arm64` 2.17, `linux_ppc`/`linux_riscv32`/`linux_riscv64` 2.34.
   - Asserts macOS `minos` (10.9 for x86_64, 11.0 for arm64).
   - Asserts `SerialNativeInterface.libVersion` equals the pom release version.
 - tresf's glibc script: gist `tresf/b00fd445ca90742b09af1b315d092eae` (linked in #190).
 - **Done when:** the release cannot proceed silently with stale or incompatible natives.
+- **Split (2026-10-16):**
+  - *Freshness gate (independent of everything else, branch `claude/backlog-b02-b03-b17-enp1qa-b02-gate`):* `.github/scripts/check-natives-fresh.sh` runs in `release-new-version.yml` before `release:prepare` and at the end of `cross-compile.yml`. It checks libVersion, that every native embeds the release version, that no native is byte-identical to the previous tag (prints the hash table to the job summary), and that the natives were built from a commit after the last change to `src/main/cpp`, `toolchain/` or `CMakeLists.txt`. Replayed on history: it fails the 2.10.3 release commit (26 problems) and passes 2.10.2 and 2.10.4.
+  - *Compatibility limits (glibc, minos, subsystem, dependencies), two alternatives:* if `draft/native-binary-static-analysis` is accepted, run its Java checks against the freshly built natives in `cross-compile.yml` (branch `...-b02-java-checks`); if it is rejected, a shell check with `readelf`/`llvm-objdump` and a limits table (branch `...-b02-script-checks`).
+  - With the release migration plan (one-click `release.yml` with artifact fan-in), both checks move to the publish job and take a directory of downloaded natives; the provenance part becomes moot because natives are built from the release tag in the same run.
+- **Wiki follow-up (B-18):** replace the manual "natives differ" checklist item in Publishing-a-Release with a pointer to the gate.
 
 ### B-03 macOS CI runner / SDK strategy before `macos-14` is retired (open)
 - **Refs:** #201 (macos-latest rejects SDK < 14.0), #178, #185, #187, #189, #54.
@@ -124,9 +129,9 @@ Legend: **P1** = correctness/crash/release-blocking, **P2** = important improvem
 
 ### B-12 Linux glibc floor without pinning dockcross forever (open)
 - **Refs:** #190, #191, `DOCK_CROSS_TAG: 20231208-4e4d3ad` in `cross-compile.yml`.
-- **Context:** pinning keeps glibc 2.3 for x86/x64 but freezes the toolchains. tresf: pinning the Windows images isn't needed.
+- **Context:** pinning keeps the glibc floor from rising (2.14 for x64, 2.28 for x86, see B-02) but freezes the toolchains. tresf: pinning the Windows images isn't needed.
 - **Options:** `dockcross/manylinux2014-x86`/`manylinux_2_28-x64` images; or ask dockcross for `-lts`-style legacy images; or unpin Windows only.
-- **Done when:** the glibc floor stays ≤ 2.17 (ideally the current 2.3–2.4) on every Linux arch and is verified by B-02.
+- **Done when:** the glibc floor stays ≤ 2.17 (today 2.14–2.34 depending on the target; 2.28 for x86/ARM comes from `fcntl` alone) on every Linux arch and is verified by B-02.
 
 ### B-13 InputStream/OutputStream adapter (open)
 - **Refs:** #183 (open), #127 (draft PR with `SerialPortStream`), #160 (exceptions now `IOException`).
