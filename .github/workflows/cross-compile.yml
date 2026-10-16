@@ -141,21 +141,25 @@ jobs:
           git commit --allow-empty -m "Precompiled natives (@${{ needs.create-branch.outputs.base_rev }}) for ${{ matrix.target }}"
           while  git pull --rebase && ! git push; do sleep 5; done
 
+  # Xcode's own SDK plus MACOSX_DEPLOYMENT_TARGET (B-03 direction A), see build.yml
   macos:
-    runs-on: macos-14
+    runs-on: ${{ matrix.runner }}
     needs: create-branch
     strategy:
       matrix:
         include:
           - target: osx_64
             profile: 'x86_64'
+            runner: macos-15-intel
             macos-deployment-target: 10.9
-            sdk-version: MacOSX10.9.sdk
 
           - target: osx_arm64
             profile: 'aarch64'
+            runner: macos-15
             macos-deployment-target: 11.0
-            sdk-version: MacOSX11.0.sdk
+
+    env:
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-deployment-target }}
 
     steps:
       - name: Checkout
@@ -169,23 +173,18 @@ jobs:
 
       - run: brew install socat
 
-      - name: Get oldest supported SDK
-        run: |
-          SDKS_DIR="$(xcrun --show-sdk-platform-path)/Developer/SDKs"
-          wget -qO- https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/${{ matrix.sdk-version }}.tar.xz \
-            | tar -xjv -C "$SDKS_DIR"
-          echo "SDKS_DIR=$SDKS_DIR" >> $GITHUB_ENV
+      - name: Keep the previous release's library for comparison
+        run: cp src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib "${RUNNER_TEMP}/previous.dylib"
 
-      - name: Set SDK version
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos-deployment-target }}
-          export SDKROOT=$SDKS_DIR/${{ matrix.sdk-version }}
-          export CMAKE_OSX_SYSROOT=$SDKROOT
-          echo "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET" >> $GITHUB_ENV
-          echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
-          echo "CMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT" >> $GITHUB_ENV
       - name: Build with Maven
         run: mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled
+
+      - name: Check deployment target and new imports
+        run: >
+          .github/scripts/check-macos-dylib.sh
+          src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib
+          ${{ matrix.macos-deployment-target }}
+          "${RUNNER_TEMP}/previous.dylib"
 
       - name: Push recompiled binaries
         run: |
