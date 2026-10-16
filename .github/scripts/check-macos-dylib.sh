@@ -34,7 +34,13 @@ sdk() {
     "$OTOOL" -l "$1" | awk '/LC_BUILD_VERSION|LC_VERSION_MIN_MACOSX/ { found = 1 } found && $1 == "sdk" { print $2; exit }'
 }
 
-actual=$(minos "$new")
+# "11" and "11.0" are the same target (a YAML matrix turns an unquoted 11.0 into 11)
+normalize() {
+    case $1 in *.*) echo "$1" ;; '') ;; *) echo "$1.0" ;; esac
+}
+
+actual=$(normalize "$(minos "$new")")
+expected=$(normalize "$expected")
 echo "${new}: minos ${actual:-?}, sdk $(sdk "$new"), expected minos ${expected}"
 echo "Linked libraries:"
 "$OTOOL" -L "$new" | tail -n +2

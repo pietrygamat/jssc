@@ -79,13 +79,13 @@ jobs:
         include:
           - profile: aarch64
             runner: macos-15
-            macos-deployment-target: 11.0
+            macos-deployment-target: '11.0'
             natives-dir: osx_arm64
           # macos-15-intel is GitHub's last Intel image. When it goes, build x86_64 on macos-15 too
           # (the x86_64 profile already sets CMAKE_OSX_ARCHITECTURES); tests are then skipped for it.
           - profile: x86_64
             runner: macos-15-intel
-            macos-deployment-target: 10.9
+            macos-deployment-target: '10.9'
             natives-dir: osx_64
 
     env:

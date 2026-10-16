@@ -151,12 +151,12 @@ jobs:
           - target: osx_64
             profile: 'x86_64'
             runner: macos-15-intel
-            macos-deployment-target: 10.9
+            macos-deployment-target: '10.9'
 
           - target: osx_arm64
             profile: 'aarch64'
             runner: macos-15
-            macos-deployment-target: 11.0
+            macos-deployment-target: '11.0'
 
     env:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-deployment-target }}
