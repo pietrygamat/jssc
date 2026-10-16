@@ -18,21 +18,41 @@ import static org.junit.Assert.assertThat;
  * loads them as separate bundles. JNI binds native methods only to libraries loaded by the
  * class loader of the declaring class, so jssc has to load the library itself.
  *
- * Runs in its own JVM (<code>reuseForks=false</code>): a native library can be loaded by
+ * Runs in its own JVM (<code>reuseForks=false</code>): a native library file can be loaded by
  * one class loader per JVM only.
  */
 public class SeparateClassLoaderTest extends DisplayMethodNameRule {
 
     @Test
     public void nativeMethodsBindWhenNativeLibLoaderHasAnotherClassLoader() throws Exception {
+        assertThat(nativeLibraryVersion(newJsscClassLoader()), is(not(nullValue())));
+    }
+
+    /**
+     * An OSGi bundle refresh loads jssc again with a new class loader. The library file from
+     * <code>jssc.boot.library.path</code> is still bound to the old one, so jssc falls back to extraction.
+     */
+    @Test
+    public void bootPathLibraryCanBeLoadedAgainByNewClassLoader() throws Exception {
+        String libDir = NativeLibraryUtil.getPlatformLibraryPath(location(SerialNativeInterface.class).getPath() + "natives/");
+        System.setProperty("jssc.boot.library.path", libDir);
+        try {
+            assertThat(nativeLibraryVersion(newJsscClassLoader()), is(not(nullValue())));
+            assertThat(nativeLibraryVersion(newJsscClassLoader()), is(not(nullValue())));
+        } finally {
+            System.clearProperty("jssc.boot.library.path");
+        }
+    }
+
+    private static ClassLoader newJsscClassLoader() {
         ClassLoader nativeLibLoader = new URLClassLoader(
                 new URL[] { location(NativeLibraryUtil.class), location(LoggerFactory.class) }, null);
-        ClassLoader jsscLoader = new URLClassLoader(new URL[] { location(SerialNativeInterface.class) }, nativeLibLoader);
+        return new URLClassLoader(new URL[] { location(SerialNativeInterface.class) }, nativeLibLoader);
+    }
 
+    private static Object nativeLibraryVersion(ClassLoader jsscLoader) throws Exception {
         Class<?> nativeInterface = Class.forName(SerialNativeInterface.class.getName(), true, jsscLoader);
-        Object version = nativeInterface.getMethod("getNativeLibraryVersion").invoke(null);
-
-        assertThat(version, is(not(nullValue())));
+        return nativeInterface.getMethod("getNativeLibraryVersion").invoke(null);
     }
 
     private static URL location(Class<?> type) {

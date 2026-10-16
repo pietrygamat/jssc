@@ -137,10 +137,21 @@ public class SerialNativeInterface {
         } catch (UnsatisfiedLinkError notOnLibraryPath) {
             // fall back to jssc.boot.library.path or extraction
         }
+        String bootPath = System.getProperty("jssc.boot.library.path");
         try {
-            String bootPath = System.getProperty("jssc.boot.library.path");
             File lib = locateLibrary(new DefaultJniExtractorStub(SerialNativeInterface.class, bootPath));
-            System.load(lib.getAbsolutePath());
+            try {
+                System.load(lib.getAbsolutePath());
+            } catch (UnsatisfiedLinkError linkError) {
+                if (bootPath == null || !isLoadedByAnotherClassLoader(linkError)) {
+                    throw linkError;
+                }
+                // jssc was loaded again by a new class loader (e.g. OSGi bundle refresh). The JVM loads a
+                // library file in one class loader only, so load a fresh copy extracted from the jar instead.
+                System.err.println("WARNING " + SerialNativeInterface.class.getName() + ": " + linkError.getMessage()
+                        + ", extracting a new copy instead of using jssc.boot.library.path.");
+                System.load(locateLibrary(new DefaultJniExtractorStub(SerialNativeInterface.class)).getAbsolutePath());
+            }
         } catch (IOException ioException) {
             throw linkError(ioException);
         } catch (UnsatisfiedLinkError linkError) {
@@ -160,6 +171,11 @@ public class SerialNativeInterface {
         }
         throw new IOException("Couldn't find " + NativeLibraryUtil.getPlatformLibraryName(libName)
                 + " for architecture " + NativeLibraryUtil.getArchitecture());
+    }
+
+    private static boolean isLoadedByAnotherClassLoader(UnsatisfiedLinkError linkError) {
+        // message of the JDK class loader, verified on JDK 8 to 25
+        return linkError.getMessage() != null && linkError.getMessage().contains("already loaded in another classloader");
     }
 
     private static UnsatisfiedLinkError linkError(Throwable cause) {
