@@ -301,6 +301,10 @@
         <configuration>
           <!-- Separate JVMs between classes; Needed for "jssc.boot.library.path" test to be effective -->
           <reuseForks>false</reuseForks>
+          <systemPropertyVariables>
+            <!-- NativeLibrarySetTest: natives must match the version being released -->
+            <jssc.project.version>${project.version}</jssc.project.version>
+          </systemPropertyVariables>
           <excludes>
             <!--suppress UnresolvedMavenProperty -->
             <exclude>${maven.exclude.tests}</exclude>
