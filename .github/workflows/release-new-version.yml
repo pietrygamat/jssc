@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # check-natives-fresh.sh compares with the previous release tag
       - run: git config --global user.email "${GITHUB_BOT_EMAIL}"
       - run: git config --global user.name "${GITHUB_BOT_NAME}"
       - name: Set up JDK 11
@@ -31,6 +33,11 @@ jobs:
       - name: Set release version if provided as input
         if: github.event.inputs.releaseVersion != ''
         run: echo "VERSIONS=-DreleaseVersion=${{ github.event.inputs.releaseVersion }}" >> $GITHUB_ENV
+      # 2.10.3 went out with the 2.10.2 binaries (#205); refuse to release stale natives
+      - name: Verify precompiled natives were rebuilt for this release
+        run: .github/scripts/check-natives-fresh.sh ${{ github.event.inputs.releaseVersion }}
+      - name: Verify precompiled natives still load on the oldest supported systems
+        run: sudo apt-get update && sudo apt-get install --yes llvm && .github/scripts/check-natives-compat.sh
       - name: Publish artifacts to Maven Central
         run: mvn -B release:prepare release:perform -P package,maven-central-release ${VERSIONS}
         env:
