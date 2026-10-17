@@ -92,6 +92,7 @@
     <plugin.nar.version>3.6.0</plugin.nar.version>
     <plugin.osmaven.version>1.7.1</plugin.osmaven.version>
     <plugin.signature.version>1.1</plugin.signature.version>
+    <plugin.templating-maven.version>3.0.0</plugin.templating-maven.version>
   </properties>
 
   <dependencies>
@@ -179,6 +180,20 @@
               <!--suppress UnresolvedMavenProperty -->
               <replacement>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</replacement>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Generate sources from src/main/java-templates, e.g. LibraryVersion with release.version baked in -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>templating-maven-plugin</artifactId>
+        <version>${plugin.templating-maven.version}</version>
+        <executions>
+          <execution>
+            <id>generate-version-class</id>
+            <goals>
+              <goal>filter-sources</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -446,6 +461,7 @@
                   <compileSourceRoots>
                     <sourceRoot>src/main/java</sourceRoot>
                     <sourceRoot>src/main/module-info</sourceRoot>
+                    <sourceRoot>${project.build.directory}/generated-sources/java-templates</sourceRoot>
                   </compileSourceRoots>
                 </configuration>
               </execution>

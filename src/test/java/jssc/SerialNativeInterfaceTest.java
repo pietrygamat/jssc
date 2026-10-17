@@ -49,6 +49,11 @@ public class SerialNativeInterfaceTest extends DisplayMethodNameRule {
 
     }
 
+    @Test
+    public void libraryVersionIsFilteredFromPom() {
+        assertTrue(SerialNativeInterface.getLibraryVersion().matches("\\d+\\.\\d+\\.\\d+"));
+    }
+
     @Test(expected = java.io.IOException.class)
     public void reportsWriteErrorsAsIOException() throws Exception {
         Assume.assumeFalse(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_WINDOWS);
