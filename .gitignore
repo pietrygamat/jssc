@@ -37,8 +37,12 @@ target/
 # IDE files: eclipse
 .settings/
 
+# IDE files: eclipse
+.vscode/
+
 # Java dumps
 core.*.dmp
 hs_err_pid*.log
 javacore.*.txt
 jitdump.*.dmp
+
