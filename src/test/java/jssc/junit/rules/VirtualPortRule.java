@@ -45,7 +45,8 @@ public class VirtualPortRule implements TestRule {
 
   private static final Logger LOG = LogManager.getLogger(VirtualPortRule.class);
 
-  private static final ExecutorService executor = Executors.newCachedThreadPool();
+  // One per rule instance: the rule shuts it down after each test, so a shared one would reject the next test's socat
+  private final ExecutorService executor = Executors.newCachedThreadPool();
 
   private final List<Future<?>> processes = new ArrayList<Future<?>>();
 
@@ -57,6 +58,8 @@ public class VirtualPortRule implements TestRule {
 
   private File virtualCom1;
   private File virtualCom2;
+
+  private BackgroundProcess socat;
 
   public VirtualPortRule() {
   }
@@ -81,6 +84,7 @@ public class VirtualPortRule implements TestRule {
       public void evaluate() throws Throwable {
         try {
           final BackgroundProcess socatProcess = openSocat();
+          VirtualPortRule.this.socat = socatProcess;
           final Future<?> socatFuture = executor.submit(socatProcess);
           VirtualPortRule.this.processes.add(socatFuture);
 
@@ -159,6 +163,19 @@ public class VirtualPortRule implements TestRule {
         }
       }
     };
+  }
+
+  /**
+   * Simulates pulling the plug: stops socat, which closes both pseudo terminals under any open
+   * port, and waits until it has exited.
+   */
+  public void unplug() throws InterruptedException {
+    final Process process = this.socat == null ? null : this.socat.getProcess();
+    if (process == null) {
+      throw new IllegalStateException("socat is not running");
+    }
+    process.destroy();
+    process.waitFor();
   }
 
   public OutputStream getOutputStream() {
