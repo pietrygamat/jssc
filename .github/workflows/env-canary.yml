@@ -1,0 +1,58 @@
+name: Build environment canary
+
+# The workflows pin their runner images and containers so that a release builds the same way
+# every time. Pins go stale instead: images get retired, package archives disappear, and the
+# replacement images ship different compilers and SDKs (#190, #201, #205). This workflow builds
+# with the images that will replace the pins, and checks that every pinned container still
+# exists, so the breakage shows up here weeks ahead instead of in the middle of a release.
+# It never publishes anything. A red run is a heads-up, not a blocker.
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'   # Mondays
+  workflow_dispatch:
+    inputs:
+      ubuntu-runner:
+        description: 'Next Ubuntu image to try'
+        default: 'ubuntu-26.04'
+      macos-runner:
+        description: 'Next macOS image to try'
+        default: 'macos-26'
+      windows-runner:
+        description: 'Next Windows image to try'
+        default: 'windows-2025'
+
+jobs:
+  # What the floating labels resolve to today. The pins in build.yml are due for a bump when this is green.
+  latest-images:
+    uses: ./.github/workflows/build.yml
+    with:
+      ubuntu-runner: ubuntu-latest
+      macos-runner: macos-latest
+      windows-runner: windows-latest
+
+  # Preview images that the floating labels will move to next
+  preview-images:
+    uses: ./.github/workflows/build.yml
+    with:
+      ubuntu-runner: ${{ inputs.ubuntu-runner || 'ubuntu-26.04' }}
+      macos-runner: ${{ inputs.macos-runner || 'macos-26' }}
+      windows-runner: ${{ inputs.windows-runner || 'windows-2025' }}
+
+  pinned-containers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check that every pinned dockcross image can still be pulled
+        run: |
+          TAG=$(sed -n 's/^ *DOCK_CROSS_TAG: *//p' .github/workflows/cross-compile.yml)
+          status=0
+          for image in $(sed -n 's/^ *image: *//p' .github/workflows/cross-compile.yml | sed "s/\${DOCK_CROSS_TAG}/${TAG}/"); do
+            if docker manifest inspect "${image}" > /dev/null; then
+              echo "available: ${image}"
+            else
+              echo "::error::pinned image is gone: ${image}"
+              status=1
+            fi
+          done
+          exit ${status}

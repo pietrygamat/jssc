@@ -1,13 +1,29 @@
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  # Lets env-canary.yml run the same matrix on the runner images that will replace the pinned ones
+  workflow_call:
+    inputs:
+      ubuntu-runner:
+        type: string
+        required: false
+      macos-runner:
+        type: string
+        required: false
+      windows-runner:
+        type: string
+        required: false
 
 env:
   MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
+# Runner images are pinned: a floating "-latest" label changes compilers, headers and SDKs
+# underneath us without a commit (#190, #201). env-canary.yml tries the next images weekly.
 jobs:
   ubuntu:
-    runs-on: [ubuntu-latest]
+    runs-on: ${{ inputs.ubuntu-runner || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
@@ -15,8 +31,10 @@ jobs:
           - profile: x86
             packages: g++-multilib
 
+          # g++ is preinstalled; it is listed so the leg builds with GCC like the release natives.
+          # (It used to say "g++-", which apt reads as "remove g++", so CMake silently fell back to clang.)
           - profile: x86_64
-            packages: g++-
+            packages: g++
 
           - profile: armhf
             packages: g++-arm-linux-gnueabihf
@@ -40,57 +58,89 @@ jobs:
             packages: clang
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           java-version: 11
           distribution: temurin
 
-      - run: sudo apt-get update && sudo apt-get install socat ${{ matrix.packages }}
+      - run: sudo apt-get update && sudo apt-get install --yes socat ${{ matrix.packages }}
       - run: mvn -P "${{ matrix.profile }}" --batch-mode
 
+  # Release natives for macOS are cross-compiled on Linux with osxcross (B-03 direction B, see the
+  # osxcross job below). A macOS runner is only needed to run the tests, so it uses the image's own
+  # Xcode SDK and needs no old SDK.
   macos:
-    runs-on: [macos-14]
+    runs-on: ${{ inputs.macos-runner || matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - profile: aarch64
-            macos-deployment-target: 11.0
-            sdk-version: MacOSX11.0.sdk
+            runner: macos-15
+          # GitHub's last Intel image; afterwards x86_64 is covered by the osxcross job only
           - profile: x86_64
-            macos-deployment-target: 10.9
-            sdk-version: MacOSX10.9.sdk
+            runner: macos-15-intel
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           java-version: 11
           distribution: temurin
 
       - run: brew install socat
 
-      - name: Get oldest supported SDK
-        run: |
-          wget -qO- https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/${{ matrix.sdk-version }}.tar.xz \
-            | tar -xjv -C $XCODE_16_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs
-
-      - name: Set SDK version
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos-deployment-target }}
-          export SDKROOT=$XCODE_16_DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs/${{ matrix.sdk-version }}
-          export CMAKE_OSX_SYSROOT=$SDKROOT
-          echo "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET" >> $GITHUB_ENV
-          echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
-          echo "CMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT" >> $GITHUB_ENV
-
       - run: mvn -P "${{ matrix.profile }}" --batch-mode
 
+  # The release toolchain for macOS natives (compile only, no tests)
+  osxcross:
+    runs-on: ${{ inputs.ubuntu-runner || 'ubuntu-24.04' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os-target-arch: x86_64
+            osxcross-arch: x86_64
+            sdk-version: MacOSX11.3.sdk
+            macos-deployment-target: '10.9'
+            natives-dir: osx_64
+          - os-target-arch: aarch_64
+            osxcross-arch: arm64
+            sdk-version: MacOSX11.3.sdk
+            macos-deployment-target: '11.0'
+            natives-dir: osx_arm64
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 11
+          distribution: temurin
+
+      - id: osxcross
+        uses: ./.github/actions/setup-osxcross
+        with:
+          sdk-version: ${{ matrix.sdk-version }}
+
+      - run: mvn -P osxcross -Dos.target.arch=${{ matrix.os-target-arch }} --batch-mode
+        env:
+          OSXCROSS_TARGET_DIR: ${{ steps.osxcross.outputs.target-dir }}
+          OSXCROSS_ARCH: ${{ matrix.osxcross-arch }}
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-deployment-target }}
+
+      - name: Check deployment target and new imports
+        run: >
+          OTOOL=$(ls /usr/bin/llvm-otool* | head -1) NM=$(ls /usr/bin/llvm-nm* | head -1)
+          .github/scripts/check-macos-dylib.sh
+          target/cmake/natives/${{ matrix.natives-dir }}/libjssc.dylib
+          ${{ matrix.macos-deployment-target }}
+          src/main/resources-precompiled/natives/${{ matrix.natives-dir }}/libjssc.dylib
+
   windows:
-    runs-on: [windows-latest]
+    runs-on: ${{ inputs.windows-runner || 'windows-2025' }}
     strategy:
       fail-fast: false
       matrix:
@@ -100,8 +150,8 @@ jobs:
           - profile: x86_64
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           java-version: 11
           distribution: temurin
