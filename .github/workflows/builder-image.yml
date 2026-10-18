@@ -37,7 +37,7 @@ jobs:
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           tag=$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)
           for image in jssc-cross jssc-cross-sdk; do
-            docker build --target "$image" \
+            docker build -f builder/Containerfile --target "$image" \
               --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
               --label org.opencontainers.image.revision=${{ github.sha }} \
               -t "ghcr.io/$owner/$image:$tag" builder
