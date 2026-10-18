@@ -75,9 +75,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(MSVC)
 	# /MT = Multithread, static version of the run-time library
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+	# Reproducible DLLs: /Brepro puts a hash of the content where the link time would go
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Brepro")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /Brepro")
 elseif(WIN32)
 	# Assume mingw, use "-static"
 	set(CMAKE_CXX_STANDARD_LIBRARIES "-static ${CMAKE_CXX_STANDARD_LIBRARIES}")
+	# Reproducible DLLs: no link time in the PE header, export or debug directory
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-insert-timestamp")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_SYSTEM_NAME STREQUAL "SunOS")
 	set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ ${CMAKE_CXX_STANDARD_LIBRARIES}")
 endif()
