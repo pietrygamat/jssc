@@ -527,6 +527,18 @@
       </properties>
     </profile>
 
+    <!-- Cross compile for macOS on Linux with osxcross (toolchain/Osxcross.cmake);
+         pass -Dos.target.arch=x86_64|aarch_64 and set OSXCROSS_TARGET_DIR, OSXCROSS_ARCH -->
+    <profile>
+      <id>osxcross</id>
+      <properties>
+        <os.target.toolchain>Osxcross</os.target.toolchain>
+
+        <os.target.name>osx</os.target.name>
+        <os.target.bitness>64</os.target.bitness>
+      </properties>
+    </profile>
+
     <!-- Cross compile for aarch64 -->
     <profile>
       <id>aarch64</id>

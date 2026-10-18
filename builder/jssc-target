@@ -1,0 +1,39 @@
+#!/bin/sh
+# Runs a command with the toolchain environment of one jssc native target:
+#
+#   jssc-target <target> <command> [args...]
+#
+# The environment comes from /opt/jssc/targets/<target>.env: for linux_* and windows_* the
+# variables (CC, CXX, CMAKE_TOOLCHAIN_FILE, ...) of the dockcross image that toolchain was
+# copied from, for osx_* the osxcross ones.
+set -e
+dir=/opt/jssc/targets
+
+if [ $# -lt 2 ] || [ ! -f "$dir/$1.env" ]; then
+    echo "usage: jssc-target <target> <command> [args...]" >&2
+    echo "targets: $(ls "$dir" | sed 's/\.env$//' | tr '\n' ' ')" >&2
+    exit 2
+fi
+target=$1
+shift
+
+# Drop whatever any target sets, so nothing leaks from the image or the caller
+for var in $(sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' "$dir"/*.env | sort -u); do
+    unset "$var"
+done
+set -a
+. "$dir/$target.env"
+set +a
+PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
+
+case $target in
+    osx_*)
+        if [ ! -d "$OSXCROSS_TARGET_DIR/SDK/MacOSX11.3.sdk" ]; then
+            echo "jssc-target: no Apple SDK in $OSXCROSS_TARGET_DIR/SDK; use the jssc-cross-sdk image," >&2
+            echo "or mount MacOSX11.3.sdk there (-v <dir>:$OSXCROSS_TARGET_DIR/SDK/MacOSX11.3.sdk:ro)" >&2
+            exit 1
+        fi
+        ;;
+esac
+
+exec "$@"
