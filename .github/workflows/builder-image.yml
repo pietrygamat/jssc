@@ -3,8 +3,14 @@ name: Build cross-compile image
 #   jssc-cross      all toolchains, no Apple SDK (fine to make public)
 #   jssc-cross-sdk  jssc-cross + MacOSX11.3.sdk; Apple's license forbids redistributing the SDK,
 #                   so this package must stay private
-# Run it only to change a toolchain on purpose, then point cross-compile.yml at the new digest.
-on: workflow_dispatch
+# It runs when builder/ changes, i.e. when a toolchain is changed on purpose; then point
+# cross-compile.yml at the new digest.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'builder/**'
+      - '.github/workflows/builder-image.yml'
 
 permissions:
   contents: read
