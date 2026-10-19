@@ -172,6 +172,9 @@ if(NOT JSSC_VERSION)
             if(DETECTED_VERSION STREQUAL "")
                 message(WARNING "Could not parse JSSC version from pom.xml, defaulting to \"${JSSC_VERSION}\"")
             else()
+                # Drop any qualifier (2.10.5-SNAPSHOT -> 2.10.5) like release.version in pom.xml,
+                # so getNativeLibraryVersion() matches the Java side's LibraryVersion
+                string(REGEX REPLACE "-.*$" "" DETECTED_VERSION "${DETECTED_VERSION}")
                 set(JSSC_VERSION "${DETECTED_VERSION}")
                 message(STATUS "Found JSSC version \"${JSSC_VERSION}\" in pom.xml")
             endif()
