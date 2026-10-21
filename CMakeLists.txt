@@ -179,7 +179,7 @@ if(NOT JSSC_VERSION)
         endif()
     endforeach()
 else()
-    message(STATUS "Release JSSC version based on pom.xml: \"${JSSC_VERSION}\"")
+    message(STATUS "JSSC version passed in: \"${JSSC_VERSION}\"")
 endif()
 # Build ident (src/main/cpp/ident.cpp). ant/build.xml passes the revision and origin; when blank,
 # the revision is taken from git ("-dirty" if native sources have uncommitted changes) and origin=local.

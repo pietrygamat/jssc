@@ -1,5 +1,11 @@
 name: Cross-compile native libraries
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release natives: version them without the -SNAPSHOT qualifier (2.10.5-SNAPSHOT -> 2.10.5)'
+        type: boolean
+        default: false
 
 env:
   MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
@@ -116,6 +122,7 @@ jobs:
                     -Dos.target.bitness=${{ matrix.os_target_bitness }} \
                     -Djssc.build.rev=${{ needs.create-branch.outputs.base_rev }} \
                     -Djssc.build.origin=${{ github.repository }} \
+                    -Djssc.native.release=${{ inputs.release }} \
                   '
 
       - name: Push recompiled binaries
@@ -172,7 +179,8 @@ jobs:
         run: |
           mvn -B clean install -P ${{ matrix.profile }},update-resources-precompiled \
             -Djssc.build.rev=${{ needs.create-branch.outputs.base_rev }} \
-            -Djssc.build.origin=${{ github.repository }}
+            -Djssc.build.origin=${{ github.repository }} \
+            -Djssc.native.release=${{ inputs.release }}
 
       - name: Push recompiled binaries
         run: |
