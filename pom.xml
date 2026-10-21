@@ -126,6 +126,11 @@
         <resource>
           <directory>${project.basedir}/src/main/resources-precompiled</directory>
         </resource>
+        <!-- Filtered: jssc/jssc-version.properties gets the pom version for LibraryVersion -->
+        <resource>
+          <directory>${project.basedir}/src/main/resources</directory>
+          <filtering>true</filtering>
+        </resource>
     </resources>
 
     <extensions>
@@ -319,6 +324,10 @@
         <configuration>
           <!-- Separate JVMs between classes; Needed for "jssc.boot.library.path" test to be effective -->
           <reuseForks>false</reuseForks>
+          <!-- Checked against LibraryVersion in SerialNativeInterfaceTest -->
+          <systemPropertyVariables>
+            <jssc.expected.version>${project.version}</jssc.expected.version>
+          </systemPropertyVariables>
           <excludes>
             <!--suppress UnresolvedMavenProperty -->
             <exclude>${maven.exclude.tests}</exclude>
