@@ -68,6 +68,7 @@
     <javah.skip>false</javah.skip>
     <jar.dependencies.skip>true</jar.dependencies.skip>
     <update-resources-precompiled.skip>true</update-resources-precompiled.skip>
+    <jssc.verify.natives.skip>true</jssc.verify.natives.skip>
 
     <!-- dependency versions a-z -->
     <dependency.junit.version>4.13.2</dependency.junit.version>
@@ -327,7 +328,8 @@
           <!-- Checked against LibraryVersion in SerialNativeInterfaceTest -->
           <systemPropertyVariables>
             <jssc.expected.version>${project.version}</jssc.expected.version>
-            <!-- Checked against the JSSC-IDENT of the native built in this run (NativeIdentTest), as computed by ant/build.xml -->
+            <!-- Checked against the JSSC-IDENT of the native built in this run (NativeIdentTest), as computed by ant/build.xml,
+                 and of the precompiled natives (PrecompiledNativesTest) -->
             <!--suppress UnresolvedMavenProperty -->
             <jssc.expected.native.dir>${maven.nativelibdir.path}</jssc.expected.native.dir>
             <!--suppress UnresolvedMavenProperty -->
@@ -346,8 +348,22 @@
           <excludes>
             <!--suppress UnresolvedMavenProperty -->
             <exclude>${maven.exclude.tests}</exclude>
+            <!-- Runs on request only, in verify-natives -->
+            <exclude>**/PrecompiledNativesTest.java</exclude>
           </excludes>
         </configuration>
+        <executions>
+          <!-- Checks the precompiled natives a release ships: -Djssc.verify.natives.skip=false (release:prepare does so) -->
+          <execution>
+            <id>verify-natives</id>
+            <goals><goal>test</goal></goals>
+            <configuration>
+              <skipTests>${jssc.verify.natives.skip}</skipTests>
+              <!-- overrides includes and excludes -->
+              <test>PrecompiledNativesTest</test>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -520,7 +536,8 @@
       <id>package</id>
       <properties>
         <javah.skip>true</javah.skip>
-        <maven.test.skip>true</maven.test.skip>
+        <!-- not maven.test.skip: the tests are compiled for verify-natives -->
+        <skipTests>true</skipTests>
         <cmake.build.skip>true</cmake.build.skip>
         <cmake.generate.skip>true</cmake.generate.skip>
       </properties>
@@ -729,6 +746,9 @@
               <pushChanges>false</pushChanges>
               <localCheckout>true</localCheckout>
               <goals>deploy</goals>
+              <!-- The release ships the precompiled natives as they are: refuse natives not built by this
+                   repository's CI for this version from these sources (PrecompiledNativesTest) -->
+              <arguments>-Djssc.verify.natives.skip=false</arguments>
             </configuration>
           </plugin>
           <plugin>
