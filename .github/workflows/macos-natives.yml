@@ -1,0 +1,193 @@
+name: macOS natives on Linux (osxcross)
+# Cross-compiles osx_64 and osx_arm64 on Linux with osxcross (toolchain/Osxcross.cmake) in the
+# builder/osxcross image, against the same SDKs the macOS runners use (MacOSX10.9.sdk and
+# MacOSX11.0.sdk from phracker/MacOSX-SDKs, checked against their SHA-256), then checks each library
+# against the precompiled one and runs the test suite with it on a real Mac.
+on:
+  workflow_dispatch:
+  # workflow_dispatch needs the workflow on the default branch; until then a push to these branches runs it
+  push:
+    branches:
+      - 'osxcross-plan-*'
+
+env:
+  MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+  SDK_URL: https://github.com/phracker/MacOSX-SDKs/releases/download/11.3
+
+jobs:
+  # The image holds no Apple SDK; it is built once per change of builder/osxcross and reused by digest
+  image:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      ref: ${{ steps.image.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - id: tag
+        name: Look for an image of this Containerfile
+        run: |
+          name=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/jssc-macos-osxcross
+          tag=$(echo "${{ hashFiles('builder/osxcross/**') }}" | cut -c1-16)
+          echo "image=$name:$tag" >> "$GITHUB_OUTPUT"
+          if docker buildx imagetools inspect "$name:$tag" > /dev/null 2>&1; then
+            echo "Reusing $name:$tag"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # osxcross needs an SDK while it builds; the Containerfile mounts this tarball for that step only
+      - name: Get MacOSX11.0.sdk for the image build
+        if: steps.tag.outputs.exists != 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/sdk-context"
+          curl -fsSL -o "$RUNNER_TEMP/sdk-context/MacOSX11.0.sdk.tar.xz" "$SDK_URL/MacOSX11.0.sdk.tar.xz"
+
+      - name: Build the image
+        if: steps.tag.outputs.exists != 'true'
+        run: |
+          docker buildx build --load --build-context sdk="$RUNNER_TEMP/sdk-context" \
+            --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
+            -t "${{ steps.tag.outputs.image }}" builder/osxcross
+          # No SDK may end up in the image
+          if docker run --rm "${{ steps.tag.outputs.image }}" find / -xdev -name 'MacOSX*.sdk*' | grep .; then
+            echo "::error::The image contains an Apple SDK"; exit 1
+          fi
+          docker push "${{ steps.tag.outputs.image }}"
+
+      - id: image
+        run: |
+          digest=$(docker buildx imagetools inspect "${{ steps.tag.outputs.image }}" | awk '$1 == "Digest:" { print $2; exit }')
+          echo "ref=${{ steps.tag.outputs.image }}" | sed "s/:[^:]*\$/@$digest/" | tee -a "$GITHUB_OUTPUT"
+
+  build:
+    runs-on: ubuntu-24.04
+    needs: image
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: osx_64
+            os-target-arch: x86_64
+            macos-arch: x86_64
+            macos-deployment-target: '10.9'
+            sdk: MacOSX10.9.sdk
+            sdk-version: '10.9'
+            sdk-sha256: fcf88ce8ff0dd3248b97f4eb81c7909f2cc786725de277f4d05a2b935cc49de0
+
+          - target: osx_arm64
+            os-target-arch: aarch_64
+            macos-arch: arm64
+            macos-deployment-target: '11.0'
+            sdk: MacOSX11.0.sdk
+            sdk-version: '11.0'
+            sdk-sha256: d3feee3ef9c6016b526e1901013f264467bb927865a03422a9cb925991cc9783
+    steps:
+      - uses: actions/checkout@v4
+
+      # Never part of an image, only of this repository's Actions cache
+      - id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/sdk/${{ matrix.sdk }}
+          key: osxcross-sdk-${{ matrix.sdk-sha256 }}
+
+      # The empty usr/include/c++/v1 is for osxcross, see builder/osxcross/Containerfile
+      - name: Get ${{ matrix.sdk }}
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/sdk"
+          curl -fsSL -o "$RUNNER_TEMP/sdk.tar.xz" "$SDK_URL/${{ matrix.sdk }}.tar.xz"
+          echo "${{ matrix.sdk-sha256 }}  $RUNNER_TEMP/sdk.tar.xz" | sha256sum -c
+          tar -xJf "$RUNNER_TEMP/sdk.tar.xz" -C "$RUNNER_TEMP/sdk"
+          rm "$RUNNER_TEMP/sdk.tar.xz"
+          mkdir -p "$RUNNER_TEMP/sdk/${{ matrix.sdk }}/usr/include/c++/v1"
+
+      - name: Pull the builder image
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull "${{ needs.image.outputs.ref }}"
+
+      - name: Build ${{ matrix.target }}
+        run: |
+          docker run --rm --workdir=/work \
+            --volume "$PWD:/work" \
+            --volume "$HOME/.m2:/root/.m2" \
+            --volume "$RUNNER_TEMP/sdk:/sdk:ro" \
+            --env MAVEN_OPTS \
+            --env OSXCROSS_TARGET_DIR=/opt/osxcross \
+            --env OSXCROSS_SDKROOT=/sdk/${{ matrix.sdk }} \
+            --env MACOS_ARCH=${{ matrix.macos-arch }} \
+            --env MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos-deployment-target }} \
+            "${{ needs.image.outputs.ref }}" \
+            mvn -B clean install -P osxcross \
+              -Dos.target.arch=${{ matrix.os-target-arch }} \
+              -Djssc.build.rev=$(git rev-parse --short HEAD) \
+              -Djssc.build.origin=${{ github.repository }}
+
+      - name: Compare with the precompiled ${{ matrix.target }}
+        run: |
+          docker run --rm --workdir=/work --volume "$PWD:/work" "${{ needs.image.outputs.ref }}" \
+            bash .github/scripts/check-macos-native.sh \
+              target/cmake/natives/${{ matrix.target }}/libjssc.dylib \
+              src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib \
+              ${{ matrix.macos-arch }} ${{ matrix.macos-deployment-target }} ${{ matrix.sdk-version }} \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natives-${{ matrix.target }}
+          path: target/cmake/natives/${{ matrix.target }}/libjssc.dylib
+          if-no-files-found: error
+
+  # Loads the cross-built library on a Mac and runs the whole test suite with it
+  test:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: osx_64
+            runner: macos-15-intel
+            profile: x86_64
+          - target: osx_arm64
+            runner: macos-15
+            profile: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 11
+          distribution: temurin
+      - run: brew install socat
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives-${{ matrix.target }}
+          path: cross-built
+
+      - name: Use the cross-built ${{ matrix.target }} as the precompiled one
+        run: |
+          lib=cross-built/libjssc.dylib
+          grep -a -o 'JSSC-IDENT [[:print:]]*' "$lib"
+          otool -hv "$lib"
+          otool -l "$lib" | grep -A4 -E 'LC_VERSION_MIN_MACOSX|LC_BUILD_VERSION'
+          otool -L "$lib"
+          codesign -dv "$lib" || true
+          if [ "${{ matrix.target }}" = osx_arm64 ]; then codesign --verify --verbose "$lib"; fi
+          cp "$lib" src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib
+
+      # No native build: the tests load the library from the classpath, i.e. the cross-built one
+      - name: Run the tests with it
+        run: |
+          sw_vers
+          mvn -B test -P ${{ matrix.profile }} -Dcmake.generate.skip=true -Dcmake.build.skip=true -Djavah.skip=true
+          cmp target/classes/natives/${{ matrix.target }}/libjssc.dylib cross-built/libjssc.dylib
