@@ -32,7 +32,10 @@ string(REGEX REPLACE "-clang\\+\\+$" "" OSXCROSS_HOST "${OSXCROSS_CXX}")
 
 set(CMAKE_C_COMPILER "${OSXCROSS_HOST}-clang")
 set(CMAKE_CXX_COMPILER "${OSXCROSS_HOST}-clang++")
-set(CMAKE_STRIP "${OSXCROSS_HOST}-strip" CACHE FILEPATH "" FORCE)
+# Not the cctools strip: ld64 signs arm64 output (ad-hoc, "linker-signed"), and that strip changes the file without
+# signing it again, which leaves a signature macOS on Apple silicon rejects. llvm-strip signs it again.
+find_program(LLVM_STRIP NAMES llvm-strip llvm-strip-18 REQUIRED)
+set(CMAKE_STRIP "${LLVM_STRIP}" CACHE FILEPATH "" FORCE)
 set(CMAKE_INSTALL_NAME_TOOL "${OSXCROSS_HOST}-install_name_tool" CACHE FILEPATH "" FORCE)
 set(CMAKE_AR "${OSXCROSS_HOST}-ar" CACHE FILEPATH "" FORCE)
 set(CMAKE_RANLIB "${OSXCROSS_HOST}-ranlib" CACHE FILEPATH "" FORCE)
