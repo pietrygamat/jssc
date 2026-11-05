@@ -25,7 +25,7 @@ RUN curl -fsSL -o /tmp/zig.tar.xz "https://ziglang.org/download/$ZIG_VERSION/zig
  && mkdir /opt/zig && tar -xJf /tmp/zig.tar.xz -C /opt/zig --strip-components=1 \
  && rm /tmp/zig.tar.xz
 
-COPY macos-sdk-tbd /usr/local/bin/macos-sdk-tbd
+COPY --chmod=755 macos-sdk-tbd /usr/local/bin/macos-sdk-tbd
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH=/opt/zig:/usr/lib/llvm-18/bin:$JAVA_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 WORKDIR /work
