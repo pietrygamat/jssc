@@ -1,10 +1,17 @@
 name: Release New Version
+# Run it on the branch to release from. It stages the release on release/v<version>:
+# the natives, the release commit (tagged), the next snapshot and the README, and uploads it to Maven Central.
+# Nothing is published: the last job prints what is left to do by hand.
 on:
   workflow_dispatch:
     inputs:
       releaseVersion:
-        description: 'Release version'
+        description: 'Release version (default: the pom version without -SNAPSHOT)'
         required: false
+
+# One release at a time
+concurrency:
+  group: release-new-version
 
 env:
   MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
@@ -15,107 +22,195 @@ env:
   NATIVE_TARGETS: linux_32,linux_64,linux_arm,linux_arm64,linux_ppc,linux_riscv32,linux_riscv64,osx_64,osx_arm64,windows_32,windows_64,windows_arm64
 
 jobs:
-  maven-central-release:
+  prepare:
     runs-on: ubuntu-latest
     env:
       # Passed through the environment, not substituted into the scripts, so the input cannot inject commands
       REQUESTED_RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Refuse to release from anything but a branch
+        if: github.ref_type != 'branch'
+        run: |
+          echo "::error::Run the release on a branch, not on the ${{ github.ref_type }} ${{ github.ref_name }}"
+          exit 1
+      - uses: actions/checkout@v7
+      - name: Set up JDK 11
+        uses: actions/setup-java@v6
         with:
+          java-version: 11
+          distribution: temurin
+      - name: Choose the release version
+        run: |
+          pom_version=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          if [[ "$pom_version" != *-SNAPSHOT ]]; then
+            echo "::error::The pom version ${pom_version} is not a snapshot"
+            exit 1
+          fi
+          version="${REQUESTED_RELEASE_VERSION:-${pom_version%-SNAPSHOT}}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::${version} is not a release version"
+            exit 1
+          fi
+          echo "version=${version}" >> $GITHUB_ENV
+      - name: Refuse a version that is released or being released
+        run: |
+          refused=
+          for ref in "tag:refs/tags/v${version}" "branch:refs/heads/release/v${version}"; do
+            if [ -n "$(git ls-remote origin "${ref#*:}")" ]; then
+              echo "::error::The ${ref%%:*} ${ref#*:refs/*/} exists: v${version} is released or a release of it is pending, see the steps that run printed"
+              refused=true
+            fi
+          done
+          [ -z "$refused" ]
+    outputs:
+      version: ${{ env.version }}
+      release_branch: release/v${{ env.version }}
+      base_branch: ${{ github.ref_name }}
+      base_sha: ${{ github.sha }}
+
+  natives:
+    needs: prepare
+    uses: ./.github/workflows/cross-compile.yml
+    with:
+      ref: ${{ needs.prepare.outputs.base_sha }}
+      natives_branch: ${{ needs.prepare.outputs.release_branch }}
+      version: ${{ needs.prepare.outputs.version }}
+
+  maven-central-release:
+    runs-on: ubuntu-latest
+    needs: [prepare, natives]
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      RELEASE_BRANCH: ${{ needs.prepare.outputs.release_branch }}
+      BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
+      BASE_REV: ${{ needs.natives.outputs.base_rev }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.release_branch }}
           # PrecompiledNativesTest, run by release:prepare, diffs the sources against the revision the natives were built from
           fetch-depth: 0
       - run: git config --global user.email "${GITHUB_BOT_EMAIL}"
       - run: git config --global user.name "${GITHUB_BOT_NAME}"
+      - name: Check that the release branch is the base plus the natives
+        run: |
+          if [ "$(git rev-parse HEAD^)" != "${BASE_SHA}" ]; then
+            echo "::error::${RELEASE_BRANCH} is not one commit on top of ${BASE_SHA}"
+            exit 1
+          fi
+          if git diff --name-only HEAD^ HEAD | grep -v '^src/main/resources-precompiled/'; then
+            echo "::error::The natives commit changes the files above"
+            exit 1
+          fi
       - name: Set up JDK 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v6
         with:
           java-version: 11
           distribution: temurin
           server-id: central
-          server-username: MAVEN_CENTRAL_PUBLISHING_TOKEN_USERNAME
-          server-password: MAVEN_CENTRAL_PUBLISHING_TOKEN_PASSWORD
+          server-username-env-var: MAVEN_CENTRAL_PUBLISHING_TOKEN_USERNAME
+          server-password-env-var: MAVEN_CENTRAL_PUBLISHING_TOKEN_PASSWORD
           gpg-private-key: ${{ secrets.JAVA_NATIVE_PGP_KEY }}
-      - name: Set release version if provided as input
-        if: github.event.inputs.releaseVersion != ''
-        run: echo "VERSIONS=-DreleaseVersion=${REQUESTED_RELEASE_VERSION}" >> $GITHUB_ENV
-      - name: Publish artifacts to Maven Central
-        # Only natives built by this repository for NATIVE_TARGETS may ship (PrecompiledNativesTest checks them)
+          # maven-gpg-plugin reads MAVEN_GPG_PASSPHRASE by default; setup-java would otherwise point it at GPG_PASSPHRASE
+          gpg-passphrase-env-var: MAVEN_GPG_PASSPHRASE
+      - name: Prepare the release and upload it to Maven Central
+        # Only natives built by this run for NATIVE_TARGETS may ship (PrecompiledNativesTest checks them).
+        # release:prepare commits and tags locally only (pushChanges=false), and the upload waits for manual publishing,
+        # so a failure here leaves no tag and burns no version.
         run: >-
-          mvn -B release:prepare release:perform -P package,maven-central-release ${VERSIONS}
-          "-Djssc.release.arguments=-Djssc.build.origin=${{ github.repository }} -Djssc.native.targets=${NATIVE_TARGETS}"
+          mvn -B release:prepare release:perform -P package,maven-central-release -DreleaseVersion=${VERSION}
+          "-Djssc.release.arguments=-Djssc.build.origin=${{ github.repository }} -Djssc.build.rev=${BASE_REV} -Djssc.native.targets=${NATIVE_TARGETS}"
         env:
           MAVEN_CENTRAL_PUBLISHING_TOKEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_TOKEN_USERNAME }}
           MAVEN_CENTRAL_PUBLISHING_TOKEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.JAVA_NATIVE_PGP_KEY_PASSPHRASE }}
-      - run: echo "releaseTag=$(git tag --points-at HEAD^)" >> $GITHUB_ENV
-      - run: echo "releaseVersion=$(echo ${{ env.releaseTag }} | cut -c2-)" >> $GITHUB_ENV
-      - name: Push changes back to repo
-        run: git push && git push --tags --force
-    outputs:
-      releaseTag: ${{ env.releaseTag }}
-      releaseVersion: ${{ env.releaseVersion }}
+      - name: Update the version in the README
+        run: |
+          sed -i "/<artifactId>jssc<\/artifactId>/{n;s/<version>.*<\/version>/<version>${VERSION}<\/version>/}" README.md
+          sed -i -e "s/java-native:jssc:[A-Za-z0-9.-]*/java-native:jssc:${VERSION}/g" README.md
+          if [ -n "$(git ls-files --modified README.md)" ]; then
+            git commit --message "Update the version in the README to ${VERSION}" README.md
+          fi
+      - name: Push the release branch and the tag
+        # Atomic: the tag never reaches the repository without the branch that holds it
+        run: git push --atomic origin "HEAD:refs/heads/${RELEASE_BRANCH}" "refs/tags/v${VERSION}"
 
   github-release:
     runs-on: ubuntu-latest
-    needs: maven-central-release
+    needs: [prepare, maven-central-release]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.maven-central-release.outputs.releaseTag }}
-      - run: git config --global user.email "${GITHUB_BOT_EMAIL}"
-      - run: git config --global user.name "${GITHUB_BOT_NAME}"
+          ref: v${{ needs.prepare.outputs.version }}
       - name: Set up JDK 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v6
         with:
           java-version: 11
           distribution: temurin
       - name: Build jar with dependencies included
         run: mvn -B install -Ppackage,jar-with-dependencies
-      - name: Publish as release
+      - name: Create the draft release
+        # Publishing it updates the wiki (update-wiki.yml)
         uses: ncipollo/release-action@v1
         with:
-          name: ${{ needs.maven-central-release.outputs.releaseVersion }}
-          tag: ${{ needs.maven-central-release.outputs.releaseTag }}
+          name: ${{ needs.prepare.outputs.version }}
+          tag: v${{ needs.prepare.outputs.version }}
           allowUpdates: true
           draft: true
           artifacts: target/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  update-readme:
+  next-steps:
     runs-on: ubuntu-latest
-    needs: maven-central-release
+    needs: [prepare, github-release]
     env:
-      ver: ${{ needs.maven-central-release.outputs.releaseVersion }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      RELEASE_BRANCH: ${{ needs.prepare.outputs.release_branch }}
+      BASE_BRANCH: ${{ needs.prepare.outputs.base_branch }}
+      BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
     steps:
-      - uses: actions/checkout@v3
-      - run: |
-            git config --global user.email "${GITHUB_BOT_EMAIL}"
-            git config --global user.name "${GITHUB_BOT_NAME}"
-      - run: |
-            sed -i "/<artifactId>jssc<\/artifactId>/{n;s/<version>.*<\/version>/<version>${ver}<\/version>/}" README.md
-            sed -i'.bak' -e "s/java-native:jssc:[A-Za-z0-9.-]*/java-native:jssc:${ver}/g" README.md
-      - run: |
-          if [ $(git ls-files --modified) ]; then
-            git commit --all --message "Update versions in source files after new release" && git pull --rebase && git push
-          fi
+      - name: Print what is left to do by hand
+        run: |
+          tee -a $GITHUB_STEP_SUMMARY <<EOF
+          ## v${VERSION} is staged, nothing is published yet
 
-  update-wiki:
+          1. Verify the draft release (https://github.com/${{ github.repository }}/releases),
+             the deployment (https://central.sonatype.com/publishing/deployments)
+             and the branch ${RELEASE_BRANCH}.
+          2. Publish the deployment on the Central Portal.
+          3. Fast-forward ${BASE_BRANCH}:
+
+                 git fetch origin
+                 git push origin origin/${RELEASE_BRANCH}:${BASE_BRANCH}
+
+             If ${BASE_BRANCH} has moved since ${BASE_SHA}, merge instead. Never rebase or squash, the tag must stay on ${BASE_BRANCH}:
+
+                 git checkout ${BASE_BRANCH} && git pull
+                 git merge --no-ff origin/${RELEASE_BRANCH}
+                 git push origin ${BASE_BRANCH}
+
+          4. Publish the draft release. That updates the wiki.
+          5. Delete the release branch: \`git push origin --delete ${RELEASE_BRANCH}\`
+
+          To abandon the release instead: drop the deployment on the Central Portal, delete the draft release, and run
+          \`git push origin --delete ${RELEASE_BRANCH} v${VERSION}\`
+          EOF
+
+  cleanup-steps:
     runs-on: ubuntu-latest
-    needs: maven-central-release
+    needs: [prepare, natives, maven-central-release, github-release]
+    if: failure() && needs.prepare.result == 'success'
     env:
-      ver: ${{ needs.maven-central-release.outputs.releaseVersion }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      RELEASE_BRANCH: ${{ needs.prepare.outputs.release_branch }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: ${{github.repository}}.wiki
-      - run: |
-          git config --global user.email "${GITHUB_BOT_EMAIL}"
-          git config --global user.name "${GITHUB_BOT_NAME}"
-      - run: |
-          sed -i "/<artifactId>jssc<\/artifactId>/{n;s/<version>.*<\/version>/<version>${ver}<\/version>/}" Add-Dependency.md
-          sed -i'.bak' -e "s/java-native:jssc:[A-Za-z0-9.-]*/java-native:jssc:${ver}/g" Add-Dependency.md
-      - run: |
-          if [ $(git ls-files --modified) ]; then
-            git commit --all --message "Update wiki with latest version released to Maven Central" && git pull --rebase && git push
-          fi
+      - name: Print how to clean up before a restart
+        run: |
+          tee -a $GITHUB_STEP_SUMMARY <<EOF
+          ## The release of v${VERSION} failed
+
+          Before running it again:
+          - Drop the deployment of v${VERSION} on the Central Portal (https://central.sonatype.com/publishing/deployments), if there is one.
+          - Delete the draft release (https://github.com/${{ github.repository }}/releases), if there is one.
+          - Delete the branch and the tag: \`git push origin --delete ${RELEASE_BRANCH}\`, and \`git push origin --delete v${VERSION}\` if the tag was pushed.
+          EOF

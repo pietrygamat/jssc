@@ -1,0 +1,30 @@
+name: Update wiki
+# Publishing the draft created by release-new-version.yml is the last step of a release
+on:
+  release:
+    types: [published]
+
+env:
+  GITHUB_BOT_NAME: github-actions
+  GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{github.repository}}.wiki
+      - run: |
+          git config --global user.email "${GITHUB_BOT_EMAIL}"
+          git config --global user.name "${GITHUB_BOT_NAME}"
+      - run: |
+          ver="${TAG#v}"
+          sed -i "/<artifactId>jssc<\/artifactId>/{n;s/<version>.*<\/version>/<version>${ver}<\/version>/}" Add-Dependency.md
+          sed -i'.bak' -e "s/java-native:jssc:[A-Za-z0-9.-]*/java-native:jssc:${ver}/g" Add-Dependency.md
+      - run: |
+          if [ $(git ls-files --modified) ]; then
+            git commit --all --message "Update wiki with latest version released to Maven Central" && git pull --rebase && git push
+          fi
