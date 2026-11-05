@@ -1,0 +1,29 @@
+# Builds the macOS natives on Linux with zig (toolchain/MacosZig.cmake), plus the JDK, Maven and CMake the
+# build needs, and LLVM for llvm-strip and for macos-sdk-tbd (which converts an SDK with Mach-O library
+# stubs, such as 10.9, into one zig can link against).
+#
+# It holds no Apple SDK. Apple's license does not allow redistributing one, so the build mounts it
+# (see .github/workflows/macos-natives.yml), and this image can be published like any other.
+#
+# The base image is pinned by digest, the packages come from the Ubuntu snapshot of SNAPSHOT and zig is
+# checked against its SHA-256, so building this file again gives the same toolchain.
+FROM docker.io/library/ubuntu:noble-20251013@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54
+
+ARG SNAPSHOT=20261101T000000Z
+RUN apt-get update --snapshot "$SNAPSHOT" \
+ && apt-get install --yes --no-install-recommends --snapshot "$SNAPSHOT" \
+      llvm-18 cmake make maven openjdk-11-jdk-headless ca-certificates curl xz-utils \
+ && rm -rf /var/lib/apt/lists/*
+
+ARG ZIG_VERSION=0.14.1
+ARG ZIG_SHA256=24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c
+RUN curl -fsSL -o /tmp/zig.tar.xz "https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz" \
+ && echo "$ZIG_SHA256  /tmp/zig.tar.xz" | sha256sum -c \
+ && mkdir /opt/zig && tar -xJf /tmp/zig.tar.xz -C /opt/zig --strip-components=1 \
+ && rm /tmp/zig.tar.xz
+
+COPY macos-sdk-tbd /usr/local/bin/macos-sdk-tbd
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=/opt/zig:/usr/lib/llvm-18/bin:$JAVA_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+WORKDIR /work
+CMD ["bash"]

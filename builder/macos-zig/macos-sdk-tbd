@@ -1,0 +1,27 @@
+#!/bin/bash
+# macos-sdk-tbd <sdk> <out> : copy a macOS SDK whose libraries are Mach-O stubs (10.9 and older) to <out>,
+# with every stub in usr/lib replaced by a .tbd file, which is all zig's linker reads. libSystem gets its
+# re-exported /usr/lib/system libraries appended as further documents, the way Apple's .tbd SDKs have
+# it, so that the linker binds to /usr/lib/libSystem.B.dylib and not to those libraries.
+set -euo pipefail
+src=$1; out=$2
+rm -rf "$out"; mkdir -p "$(dirname "$out")"; cp -a "$src" "$out"
+lib=$out/usr/lib
+
+find "$lib" -type f -name '*.dylib' -print0 | while IFS= read -r -d '' f; do
+    llvm-readtapi -stubify --filetype=tbd-v4 --delete-input "$f" 2> /dev/null || echo "Not a library stub, left as is: $f"
+done
+# Links to a stub now point at nothing; point them at its .tbd
+find "$lib" -type l -name '*.dylib' -print0 | while IFS= read -r -d '' l; do
+    target=$(readlink "$l")
+    case $target in *.dylib) ln -sf "${target%.dylib}.tbd" "${l%.dylib}.tbd"; rm "$l" ;; esac
+done
+
+umbrella=$lib/libSystem.B.tbd
+grep -o "/usr/lib/system/[A-Za-z0-9_+.-]*\.dylib" "$umbrella" | sort -u | while read -r reexport; do
+    tbd=$out${reexport%.dylib}.tbd
+    if [ -f "$tbd" ]; then cat "$tbd"; fi
+done > "$umbrella.reexports"
+cat "$umbrella.reexports" >> "$umbrella"
+rm "$umbrella.reexports"
+echo "$out: $(find "$lib" -name '*.tbd' | wc -l) .tbd files, $(grep -c '^--- ' "$umbrella") documents in libSystem.B.tbd"
