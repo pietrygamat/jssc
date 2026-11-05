@@ -52,7 +52,7 @@ jobs:
         run: |
           docker buildx build --load --build-context sdk="$RUNNER_TEMP/sdk-context" \
             --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
-            -t "${{ steps.tag.outputs.image }}" builder/osxcross
+            -f builder/osxcross/Containerfile -t "${{ steps.tag.outputs.image }}" builder/osxcross
           # No SDK may end up in the image
           if docker run --rm "${{ steps.tag.outputs.image }}" find / -xdev -name 'MacOSX*.sdk*' | grep .; then
             echo "::error::The image contains an Apple SDK"; exit 1
