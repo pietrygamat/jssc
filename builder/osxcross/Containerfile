@@ -16,7 +16,10 @@
 FROM docker.io/library/ubuntu:noble-20251013@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54
 
 ARG SNAPSHOT=20261101T000000Z
-RUN apt-get update --snapshot "$SNAPSHOT" \
+# The snapshot service is HTTPS only and the base image has no CA certificates: those come from the
+# archive as of the build, every other package from the snapshot
+RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates \
+ && apt-get update --snapshot "$SNAPSHOT" \
  && apt-get install --yes --no-install-recommends --snapshot "$SNAPSHOT" \
       clang-18 llvm-18 cmake make maven openjdk-11-jdk-headless ca-certificates git patch python3 \
       libssl-dev liblzma-dev libxml2-dev libbz2-dev zlib1g-dev uuid-dev xz-utils bzip2 cpio \
