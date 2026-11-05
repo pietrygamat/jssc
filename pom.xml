@@ -605,6 +605,18 @@
       </properties>
     </profile>
 
+    <!-- Cross compile for macOS on Linux with clang and ld64.lld (toolchain/MacosLld.cmake);
+         pass -Dos.target.arch=x86_64|aarch_64 and set MACOS_SDK, MACOS_ARCH, MACOSX_DEPLOYMENT_TARGET -->
+    <profile>
+      <id>macos-lld</id>
+      <properties>
+        <os.target.toolchain>MacosLld</os.target.toolchain>
+
+        <os.target.name>osx</os.target.name>
+        <os.target.bitness>64</os.target.bitness>
+      </properties>
+    </profile>
+
     <!-- Cross compile for aarch64 -->
     <profile>
       <id>aarch64</id>

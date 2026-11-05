@@ -1,0 +1,20 @@
+# Builds the macOS natives on Linux with LLVM: clang, ld64.lld and llvm-strip (toolchain/MacosLld.cmake),
+# plus the JDK, Maven and CMake the build needs.
+#
+# It holds no Apple SDK. Apple's license does not allow redistributing one, so the build mounts it
+# (see .github/workflows/macos-natives.yml), and this image can be published like any other.
+#
+# The base image is pinned by digest and the packages come from the Ubuntu snapshot of SNAPSHOT,
+# so building this file again gives the same compiler and linker.
+FROM docker.io/library/ubuntu:noble-20251013@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54
+
+ARG SNAPSHOT=20261101T000000Z
+RUN apt-get update --snapshot "$SNAPSHOT" \
+ && apt-get install --yes --no-install-recommends --snapshot "$SNAPSHOT" \
+      clang-18 lld-18 llvm-18 cmake make maven openjdk-11-jdk-headless ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=/usr/lib/llvm-18/bin:$JAVA_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+WORKDIR /work
+CMD ["bash"]
