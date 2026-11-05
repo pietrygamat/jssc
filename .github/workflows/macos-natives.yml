@@ -147,6 +147,10 @@ jobs:
           - target: osx_arm64
             runner: macos-15
             profile: aarch64
+          # Another pool of Apple silicon runners, for when macos-15 has none to spare
+          - target: osx_arm64
+            runner: macos-26
+            profile: aarch64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
