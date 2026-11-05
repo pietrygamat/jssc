@@ -5,6 +5,10 @@ name: macOS natives on Linux (clang + ld64.lld)
 # against the precompiled one and runs the test suite with it on a real Mac.
 on:
   workflow_dispatch:
+  # workflow_dispatch needs the workflow on the default branch; until then a push to these branches runs it
+  push:
+    branches:
+      - 'osxcross-plan-*'
 
 env:
   MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
