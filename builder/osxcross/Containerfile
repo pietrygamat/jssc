@@ -37,7 +37,8 @@ ARG SDK_SHA256=d3feee3ef9c6016b526e1901013f264467bb927865a03422a9cb925991cc9783
 # osxcross refuses an SDK without libc++ headers: Xcode keeps them in its toolchain, and osxcross's SDK
 # packaging script copies them into the SDK. jssc includes no C++ standard library header (it only
 # uses operator new and delete from libc++.1.dylib), so the SDK gets an empty usr/include/c++/v1. A
-# C++ library header included later fails to compile instead of coming from somewhere else.
+# C++ library header included later fails to compile instead of coming from somewhere else. For the
+# same reason the last self-test of build.sh, which compiles <iostream>, is left out; its C test stays.
 #
 # TP_OSXCROSS_DEV builds xar, tapi and cctools from the pinned checkouts instead of branch heads.
 RUN --mount=type=bind,from=sdk,target=/sdk \
@@ -52,6 +53,7 @@ RUN --mount=type=bind,from=sdk,target=/sdk \
  && tar -czf /src/osxcross/tarballs/MacOSX11.0.sdk.tar.gz -C /tmp/sdk MacOSX11.0.sdk \
  && rm -rf /tmp/sdk \
  && cd /src/osxcross \
+ && sed -i '/oclang\/test\.cpp/d' build.sh \
  && UNATTENDED=1 BUILD_FLAVOR=stable SDK_VERSION=11.0 TARGET_DIR=/opt/osxcross TP_OSXCROSS_DEV=/src/deps \
     DISABLE_LTO_SUPPORT=1 JOBS=$(nproc) ./build.sh \
  && rm -rf /opt/osxcross/SDK/* /src
