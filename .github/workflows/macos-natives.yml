@@ -1,0 +1,80 @@
+name: macOS natives with the bundled Xcode SDK
+# For comparison with the cross builds: builds osx_64 on macos-15-intel and osx_arm64 on macos-15 with the
+# SDK of the runner's default Xcode and only MACOSX_DEPLOYMENT_TARGET set (no old SDK), runs the tests
+# there, and compares each library with the precompiled one.
+on:
+  workflow_dispatch:
+  # workflow_dispatch needs the workflow on the default branch; until then a push to these branches runs it
+  push:
+    branches:
+      - 'osxcross-plan-*'
+
+env:
+  MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: osx_64
+            runner: macos-15-intel
+            profile: x86_64
+            macos-deployment-target: '10.9'
+          - target: osx_arm64
+            runner: macos-15
+            profile: aarch64
+            macos-deployment-target: '11.0'
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 11
+          distribution: temurin
+      - run: brew install socat
+
+      - name: Build and test ${{ matrix.target }}
+        env:
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-deployment-target }}
+        run: |
+          sw_vers
+          xcodebuild -version
+          xcrun --show-sdk-version
+          mvn -B clean install -P ${{ matrix.profile }} \
+            -Djssc.build.rev=$(git rev-parse --short HEAD) -Djssc.build.origin=${{ github.repository }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natives-${{ matrix.target }}
+          path: target/cmake/natives/${{ matrix.target }}/libjssc.dylib
+          if-no-files-found: error
+
+  compare:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: osx_64
+            macos-arch: x86_64
+            macos-deployment-target: '10.9'
+            sdk-version: '10.9'
+          - target: osx_arm64
+            macos-arch: arm64
+            macos-deployment-target: '11.0'
+            sdk-version: '11.0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives-${{ matrix.target }}
+          path: xcode-built
+      - name: Compare with the precompiled ${{ matrix.target }}
+        run: |
+          export PATH=/usr/lib/llvm-18/bin:$PATH
+          bash .github/scripts/check-macos-native.sh xcode-built/libjssc.dylib \
+            src/main/resources-precompiled/natives/${{ matrix.target }}/libjssc.dylib \
+            ${{ matrix.macos-arch }} ${{ matrix.macos-deployment-target }} ${{ matrix.sdk-version }}
