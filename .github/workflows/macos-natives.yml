@@ -38,7 +38,7 @@ jobs:
             echo "Reusing $name:$tag"
           else
             docker build --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
-              -t "$name:$tag" builder/macos-lld
+              -f builder/macos-lld/Containerfile -t "$name:$tag" builder/macos-lld
             docker push "$name:$tag"
           fi
           digest=$(docker buildx imagetools inspect "$name:$tag" | awk '$1 == "Digest:" { print $2; exit }')
