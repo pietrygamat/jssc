@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1
+# Builds the macOS natives on Linux with osxcross (toolchain/Osxcross.cmake): Apple's cctools and ld64
+# (osxcross "stable" flavor: cctools 986, ld64 711) behind the osxcross clang wrappers, plus the JDK,
+# Maven and CMake the build needs.
+#
+# It holds no Apple SDK. Apple's license does not allow redistributing one. osxcross needs an SDK
+# while it builds, so the build is given one as the named context "sdk" (a directory with
+# MacOSX11.0.sdk.tar.xz), mounted for that one step and removed from the result:
+#
+#   docker build --build-context sdk=<dir> builder/osxcross
+#
+# The build mounts the SDKs again and picks one with OSXCROSS_SDKROOT (see .github/workflows/macos-natives.yml).
+#
+# The base image is pinned by digest, the packages come from the Ubuntu snapshot of SNAPSHOT and the
+# osxcross sources are pinned by commit, so building this file again gives the same toolchain.
+FROM docker.io/library/ubuntu:noble-20251013@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54
+
+ARG SNAPSHOT=20261101T000000Z
+RUN apt-get update --snapshot "$SNAPSHOT" \
+ && apt-get install --yes --no-install-recommends --snapshot "$SNAPSHOT" \
+      clang-18 llvm-18 cmake make maven openjdk-11-jdk-headless ca-certificates git patch python3 \
+      libssl-dev liblzma-dev libxml2-dev libbz2-dev zlib1g-dev uuid-dev xz-utils bzip2 cpio \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=/opt/osxcross/bin:/usr/lib/llvm-18/bin:$JAVA_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ARG OSXCROSS_COMMIT=27d21e4977c9751d01199c7a226a6faf494c3dd9
+ARG XAR_COMMIT=5fa4675419cfec60ac19a9c7f7c2d0e7c831a497
+ARG TAPI_COMMIT=640b4623929c923c0468143ff2a363a48665fa54
+ARG CCTOOLS_COMMIT=e101a6940dcb5988808a16626bc43851f00dc05f
+ARG SDK_SHA256=d3feee3ef9c6016b526e1901013f264467bb927865a03422a9cb925991cc9783
+
+# osxcross refuses an SDK without libc++ headers: Xcode keeps them in its toolchain, and osxcross's SDK
+# packaging script copies them into the SDK. jssc includes no C++ standard library header (it only
+# uses operator new and delete from libc++.1.dylib), so the SDK gets an empty usr/include/c++/v1. A
+# C++ library header included later fails to compile instead of coming from somewhere else.
+#
+# TP_OSXCROSS_DEV builds xar, tapi and cctools from the pinned checkouts instead of branch heads.
+RUN --mount=type=bind,from=sdk,target=/sdk \
+    fetch() { mkdir -p "$1" && git -C "$1" init -q && git -C "$1" fetch -q --depth 1 "$2" "$3" && git -C "$1" checkout -q FETCH_HEAD; } \
+ && fetch /src/osxcross https://github.com/tpoechtrager/osxcross.git "$OSXCROSS_COMMIT" \
+ && fetch /src/deps/xar https://github.com/tpoechtrager/xar.git "$XAR_COMMIT" \
+ && fetch /src/deps/apple-libtapi https://github.com/tpoechtrager/apple-libtapi.git "$TAPI_COMMIT" \
+ && fetch /src/deps/cctools-port https://github.com/tpoechtrager/cctools-port.git "$CCTOOLS_COMMIT" \
+ && echo "$SDK_SHA256  /sdk/MacOSX11.0.sdk.tar.xz" | sha256sum -c \
+ && mkdir /tmp/sdk && tar -xJf /sdk/MacOSX11.0.sdk.tar.xz -C /tmp/sdk \
+ && mkdir -p /tmp/sdk/MacOSX11.0.sdk/usr/include/c++/v1 \
+ && tar -czf /src/osxcross/tarballs/MacOSX11.0.sdk.tar.gz -C /tmp/sdk MacOSX11.0.sdk \
+ && rm -rf /tmp/sdk \
+ && cd /src/osxcross \
+ && UNATTENDED=1 BUILD_FLAVOR=stable SDK_VERSION=11.0 TARGET_DIR=/opt/osxcross TP_OSXCROSS_DEV=/src/deps \
+    DISABLE_LTO_SUPPORT=1 JOBS=$(nproc) ./build.sh \
+ && rm -rf /opt/osxcross/SDK/* /src
+
+WORKDIR /work
+CMD ["bash"]
